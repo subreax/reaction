@@ -2,6 +2,7 @@ package com.subreax.reaction
 
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
 
 sealed class Screen(val route: String) {
     object Welcome : Screen("welcome_screen")
@@ -13,6 +14,13 @@ sealed class Screen(val route: String) {
         val routeWithArgs = "$route/{$chatIdArg}"
         val args = listOf(
             navArgument(chatIdArg) { type = NavType.StringType }
+        )
+    }
+    object JoinChat : Screen("join_chat") {
+        val chatIdArg = "chatId"
+        val routeWithArgs = "$route/{$chatIdArg}"
+        val deepLinks = listOf(
+            navDeepLink { uriPattern = "http://37.18.110.82:3000/join?roomId={$chatIdArg}" }
         )
     }
 }

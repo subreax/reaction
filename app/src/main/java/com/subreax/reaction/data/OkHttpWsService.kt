@@ -1,5 +1,6 @@
 package com.subreax.reaction.data
 
+/*
 import android.util.Log
 import com.subreax.reaction.data.auth.AuthRepository
 import com.subreax.reaction.data.chat.Message
@@ -69,4 +70,4 @@ class OkHttpWsService(
     companion object {
         private const val TAG = "OkHttpWsService"
     }
-}
+}*/

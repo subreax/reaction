@@ -28,6 +28,11 @@ interface ChatRepository {
     suspend fun getChatById(chatId: String): Chat?
     suspend fun getMessages(chatId: String): List<Message>
     suspend fun sendMessage(chatId: String, text: String)
+    suspend fun createChat(name: String)
+    suspend fun joinChat(chatId: String)
+    suspend fun leaveChat(chatId: String)
+    suspend fun isUserAMemberOfTheChat(chatId: String): Boolean
 
     val onMessagesChanged: Flow<Chat>
+    val onChatsChanged: Flow<Int>
 }

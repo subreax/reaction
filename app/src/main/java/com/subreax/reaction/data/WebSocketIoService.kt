@@ -23,14 +23,18 @@ class WebSocketIoService(
 ) : SocketService {
 
     private val _headers = mutableMapOf<String, List<String>>()
-
     private val _coroutineScope = CoroutineScope(Dispatchers.IO)
     private var _socket: Socket? = null
     private var _connectionId = ""
 
 
     private val _onMessage = MutableSharedFlow<Message>()
-    override val onMessage: Flow<Message> = _onMessage.asSharedFlow()
+    override val onMessage: Flow<Message>
+        get() = _onMessage.asSharedFlow()
+
+    private val _onCreateChat = MutableSharedFlow<String>()
+    override val onCreateChat: Flow<String>
+        get() = _onCreateChat.asSharedFlow()
 
 
     override fun start() {
@@ -49,6 +53,7 @@ class WebSocketIoService(
                 on("onConnection", this@WebSocketIoService::eventOnConnection)
                 on("onException", this@WebSocketIoService::eventOnException)
                 on("onSendMessage", this@WebSocketIoService::eventOnMessage)
+                on("onCreateRoom", this@WebSocketIoService::eventOnCreateChat)
                 connect()
             }
         }
@@ -64,6 +69,27 @@ class WebSocketIoService(
         _socket?.emit("newMessage", json)
     }
 
+    override fun createChat(name: String) {
+        val json = JSONObject()
+        json.put("userId", authRepository.getUserId())
+        json.put("name", name)
+        _socket?.emit("createRoom", json)
+    }
+
+    override fun joinChat(chatId: String) {
+        val json = JSONObject()
+        json.put("userId", authRepository.getUserId())
+        json.put("roomId", chatId)
+        _socket?.emit("joinToRoom", json)
+    }
+
+    override fun leaveChat(chatId: String) {
+        val json = JSONObject()
+        json.put("userId", authRepository.getUserId())
+        json.put("roomId", chatId)
+        _socket?.emit("leaveFromRoom", json)
+    }
+
     override fun stop() {
         _socket?.disconnect()
         _socket = null
@@ -73,7 +99,7 @@ class WebSocketIoService(
         if (args.isNotEmpty()) {
             val obj = args[0] as JSONObject
             _connectionId = obj["connectionId"] as String
-            Log.d(TAG, "onConnection: $_connectionId")
+            //Log.d(TAG, "onConnection: $_connectionId")
 
             val req = JSONObject()
             req.put("userId", authRepository.getUserId())
@@ -88,8 +114,17 @@ class WebSocketIoService(
                 val json = obj.getJSONObject("message").toString()
                 val messageDto = Gson().fromJson(json, MessageDto::class.java)
                 val message = messageDto.toMessage(userRepository)
-                Log.d(TAG, "onMessage: ${message.content}")
                 _onMessage.emit(message)
+            }
+        }
+    }
+
+    private fun eventOnCreateChat(args: Array<Any>) {
+        _coroutineScope.launch {
+            if (args.isNotEmpty()) {
+                val json = args[0] as JSONObject
+                val chatId = json.getString("roomId")
+                _onCreateChat.emit(chatId)
             }
         }
     }

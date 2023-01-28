@@ -31,13 +31,19 @@ fun CustomButton(
 }
 
 @Composable
-fun CustomOutlinedButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun CustomOutlinedButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
+) {
     OutlinedButton(
         onClick = onClick,
         modifier = modifier
             .widthIn(160.dp)
             .heightIn(48.dp),
-        border = ButtonDefaults.outlinedBorder.copy(width = 2.dp)
+        border = ButtonDefaults.outlinedBorder.copy(width = 2.dp),
+        enabled = enabled
     ) {
         Text(text = text, color = MaterialTheme.colors.onSurface)
     }

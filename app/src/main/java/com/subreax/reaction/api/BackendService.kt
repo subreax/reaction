@@ -109,7 +109,13 @@ data class ChatDetailsDto(
     val members: List<MemberDto>,
 
     @SerializedName("membersCount")
-    val membersCount: Int
+    val membersCount: Int,
+
+    @SerializedName("isMuted")
+    val isMuted: Boolean,
+
+    @SerializedName("isPinned")
+    val isPinned: Boolean
 )
 
 data class MemberDto(

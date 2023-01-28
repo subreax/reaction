@@ -12,6 +12,8 @@ import com.subreax.reaction.ui.chat.ChatScreen
 import com.subreax.reaction.ui.chat.ChatViewModel
 import com.subreax.reaction.ui.home.HomeScreen
 import com.subreax.reaction.ui.home.HomeViewModel
+import com.subreax.reaction.ui.joinchat.JoinChatScreen
+import com.subreax.reaction.ui.joinchat.JoinChatViewModel
 import com.subreax.reaction.ui.signin.SignInScreen
 import com.subreax.reaction.ui.signin.SignInViewModel
 import com.subreax.reaction.ui.signup.SignUpScreen
@@ -93,9 +95,38 @@ fun ReactionNavHost(
                 viewModel = viewModel(
                     factory = ChatViewModel.Factory(userId, chatId, appContainer.chatRepository)
                 ),
+                // todo: fix back nav button behaviour to this
                 onBackPressed = {
-                    navController.popBackStack()
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(navController.currentDestination?.route!!) {
+                            inclusive = true
+                        }
+                    }
                 }
+            )
+        }
+
+        composable(
+            route = Screen.JoinChat.routeWithArgs,
+            deepLinks = Screen.JoinChat.deepLinks
+        ) { navBackStackEntry ->
+            val chatId = navBackStackEntry.arguments?.getString(Screen.JoinChat.chatIdArg) ?: "room_id_is_empty"
+            JoinChatScreen(
+                joinChatViewModel = viewModel(
+                    factory = JoinChatViewModel.Factory(
+                        chatId = chatId,
+                        chatRepository = appContainer.chatRepository,
+                        navHome = {
+                            navController.navigateToHomeScreen()
+                        },
+                        navToChat = { _chatId ->
+                            val currentRoute = navController.currentDestination?.route ?: Screen.Welcome.route
+                            navController.navigate("${Screen.Chat.route}/$_chatId") {
+                                popUpTo(currentRoute) { inclusive = true }
+                            }
+                        }
+                    )
+                )
             )
         }
     }

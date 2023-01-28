@@ -24,8 +24,16 @@ class HomeViewModel(
     init {
         viewModelScope.launch {
             updateChatList()
+        }
 
+        viewModelScope.launch {
             chatRepository.onMessagesChanged.collect {
+                updateChatList()
+            }
+        }
+
+        viewModelScope.launch {
+            chatRepository.onChatsChanged.collect {
                 updateChatList()
             }
         }
