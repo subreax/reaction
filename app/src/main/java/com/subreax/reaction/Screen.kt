@@ -20,7 +20,7 @@ sealed class Screen(val route: String) {
         val chatIdArg = "chatId"
         val routeWithArgs = "$route/{$chatIdArg}"
         val deepLinks = listOf(
-            navDeepLink { uriPattern = "http://37.18.110.82:3000/join?roomId={$chatIdArg}" }
+            navDeepLink { uriPattern = "reaction://join/{$chatIdArg}" }
         )
     }
 }

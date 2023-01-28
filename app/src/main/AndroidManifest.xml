@@ -29,7 +29,8 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="http" android:host="37.18.110.82" />
+                <!--<data android:scheme="http" android:host="37.18.110.82" />-->
+                <data android:scheme="reaction" android:host="join" />
             </intent-filter>
 
             <meta-data
