@@ -74,7 +74,9 @@ class ChatRepositoryImpl(
             if (invalidateCache) {
                 _isChatsLoaded = false
             }
-            _getChatMap().map { it.value }
+            _getChatMap()
+                .map { it.value }
+                .sortedBy { it.lastMessage?.sentTime ?: System.currentTimeMillis() }
         }
     }
 
@@ -126,19 +128,24 @@ class ChatRepositoryImpl(
                 api.getChatList(authRepository.getToken())
             }
 
-            for (chatDto in chatsDto) {
-                val lastMessage = chatDto.lastMessage?.toMessage(userRepository)
-                val chatDetailsDto = api.getChatDetails(authRepository.getToken(), chatDto.id)
+            coroutineScope {
+                for (chatDto in chatsDto) {
+                    launch {
+                        val lastMessage = chatDto.lastMessage?.toMessage(userRepository)
+                        val chatDetailsDto =
+                            api.getChatDetails(authRepository.getToken(), chatDto.id)
 
-                outChats[chatDto.id] = Chat(
-                    chatDto.id,
-                    chatDto.avatar,
-                    chatDto.title,
-                    lastMessage,
-                    chatDto.isMuted,
-                    chatDto.isPinned,
-                    chatDetailsDto.membersCount
-                )
+                        outChats[chatDto.id] = Chat(
+                            chatDto.id,
+                            chatDto.avatar,
+                            chatDto.title,
+                            lastMessage,
+                            chatDto.isMuted,
+                            chatDto.isPinned,
+                            chatDetailsDto.membersCount
+                        )
+                    }
+                }
             }
 
             _onChatsChanged.emit(0)
