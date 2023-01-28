@@ -8,7 +8,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -16,10 +15,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.subreax.reaction.R
-import com.subreax.reaction.Screen
 import com.subreax.reaction.ui.theme.ReactionTheme
 
 @Composable
@@ -53,22 +49,26 @@ fun WelcomeScreen(
                     modifier = Modifier.padding(top = 16.dp)
                 )
 
-                Text(text = "Ну здарова епта")
+                Text(
+                    text = stringResource(R.string.welcome),
+                    color = LocalContentColor.current.copy(alpha = ContentAlpha.medium)
+                )
             }
 
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 CustomButton(
-                    text = "Sign in",
+                    text = stringResource(R.string.sign_in),
                     onClick = onClickSignIn
                 )
-                CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
-                    Text(
-                        text = "- OR -",
-                        modifier = Modifier.padding(vertical = 16.dp)
-                    )
-                }
+
+                Text(
+                    text = stringResource(R.string.or),
+                    modifier = Modifier.padding(vertical = 16.dp),
+                    color = LocalContentColor.current.copy(alpha = ContentAlpha.medium)
+                )
+
                 CustomOutlinedButton(
-                    text = "Sign up",
+                    text = stringResource(R.string.sign_up),
                     onClick = onClickSignUp
                 )
             }

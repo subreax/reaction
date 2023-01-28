@@ -1,3 +1,17 @@
 <resources>
     <string name="app_name">Reaction</string>
+    <string name="welcome">Ну здарова</string>
+    <string name="sign_in">Войти</string>
+    <string name="or">- или -</string>
+    <string name="sign_up">Зарегаться</string>
+    <string name="enter_your_account">Введите аккаунт</string>
+    <string name="username">Имя пользователя</string>
+    <string name="password">Пароль</string>
+    <string name="forgot_password">Забыли пароль?</string>
+    <string name="nav_back">Вернуться назад</string>
+    <string name="sign_up_enter_account">Создайте аккаунт, чтобы начать пользоваться чатом!</string>
+    <string name="email">E-mail</string>
+    <string name="err_enter_email">Ошибка: введите почту</string>
+    <string name="err_enter_username">Ошибка: введите имя пользователя</string>
+    <string name="err_enter_password">Ошибка: введите пароль</string>
 </resources>

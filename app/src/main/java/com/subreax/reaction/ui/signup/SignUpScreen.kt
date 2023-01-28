@@ -1,26 +1,28 @@
 package com.subreax.reaction.ui.signup
 
+import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.subreax.reaction.R
 import com.subreax.reaction.ui.CustomButton
 import com.subreax.reaction.ui.CustomTextField
-import com.subreax.reaction.ui.signin.SignInState
+import com.subreax.reaction.ui.theme.ReactionTheme
 
 @Composable
 fun SignUpScreen(
@@ -28,12 +30,44 @@ fun SignUpScreen(
     onBackPressed: () -> Unit = {},
     onSignUpDone: () -> Unit = {}
 ) {
-    val message = signUpViewModel.message
+    val uiState = signUpViewModel.uiState
 
-    LaunchedEffect(signUpViewModel.isSignUpDone) {
-        if (signUpViewModel.isSignUpDone) {
+    LaunchedEffect(uiState.isSignUpDone) {
+        if (uiState.isSignUpDone) {
             onSignUpDone()
         }
+    }
+
+    SignUpScreen(
+        email = signUpViewModel.email,
+        username = signUpViewModel.username,
+        password = signUpViewModel.password,
+        onEmailChanged = signUpViewModel::updateEmail,
+        onUsernameChanged = signUpViewModel::updateUsername,
+        onPasswordChanged = signUpViewModel::updatePassword,
+        onSignUpClicked = signUpViewModel::signUp,
+        onBackPressed = onBackPressed,
+        isLoading = uiState.isLoading,
+        errorMsg = uiState.errorMsg.value
+    )
+}
+
+@Composable
+fun SignUpScreen(
+    email: String,
+    username: String,
+    password: String,
+    onEmailChanged: (String) -> Unit,
+    onUsernameChanged: (String) -> Unit,
+    onPasswordChanged: (String) -> Unit,
+    onSignUpClicked: () -> Unit,
+    onBackPressed: () -> Unit,
+    isLoading: Boolean,
+    errorMsg: String
+) {
+    val emailFocusRequester = FocusRequester()
+    LaunchedEffect(Unit) {
+        emailFocusRequester.requestFocus()
     }
 
     Surface(modifier = Modifier.fillMaxSize()) {
@@ -43,20 +77,22 @@ fun SignUpScreen(
                 onClick = onBackPressed,
                 modifier = Modifier.padding(8.dp)
             ) {
-                Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Go back")
+                Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = stringResource(R.string.nav_back))
             }
 
             Column(
                 modifier = Modifier.padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Text("To get started, заполни вот эту ксиву")
+                Text(stringResource(R.string.sign_up_enter_account))
 
                 CustomTextField(
-                    value = signUpViewModel.email,
-                    onValueChange = signUpViewModel::updateEmail,
-                    hint = "E-mail",
-                    modifier = Modifier.fillMaxWidth(),
+                    value = email,
+                    onValueChange = onEmailChanged,
+                    hint = stringResource(R.string.email),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(emailFocusRequester),
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Email,
                         imeAction = ImeAction.Next
@@ -64,9 +100,9 @@ fun SignUpScreen(
                 )
 
                 CustomTextField(
-                    value = signUpViewModel.username,
-                    onValueChange = signUpViewModel::updateUsername,
-                    hint = "Username",
+                    value = username,
+                    onValueChange = onUsernameChanged,
+                    hint = stringResource(R.string.username),
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Text,
@@ -75,9 +111,9 @@ fun SignUpScreen(
                 )
 
                 CustomTextField(
-                    value = signUpViewModel.password,
-                    onValueChange = signUpViewModel::updatePassword,
-                    hint = "Password",
+                    value = password,
+                    onValueChange = onPasswordChanged,
+                    hint = stringResource(R.string.password),
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Password,
@@ -86,23 +122,42 @@ fun SignUpScreen(
                     visualTransformation = PasswordVisualTransformation()
                 )
 
-                if (message.isNotEmpty()) {
-                    CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
-                        Text(message, fontSize = 14.sp, color = MaterialTheme.colors.error)
-                    }
+                if (errorMsg.isNotEmpty()) {
+                    Text(
+                        errorMsg,
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colors.error.copy(alpha = ContentAlpha.medium)
+                    )
                 }
 
-                Text(text = "Нажимая Sign up, вы соглашаетесь на оформление кредита", fontSize = 6.sp)
-
                 CustomButton(
-                    text = "Sign up",
-                    onClick = signUpViewModel::signUp,
+                    text = stringResource(R.string.sign_up),
+                    onClick = onSignUpClicked,
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
                         .padding(bottom = 16.dp),
-                    enabled = !signUpViewModel.isLoading
+                    enabled = !isLoading
                 )
             }
         }
+    }
+}
+
+@Preview(uiMode = UI_MODE_NIGHT_YES)
+@Composable
+fun SignUpPreview() {
+    ReactionTheme {
+        SignUpScreen(
+            email = "",
+            username = "",
+            password = "",
+            onEmailChanged = {},
+            onUsernameChanged = {},
+            onPasswordChanged = {},
+            onSignUpClicked = {  },
+            onBackPressed = {  },
+            isLoading = false,
+            errorMsg = ""
+        )
     }
 }

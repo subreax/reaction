@@ -39,6 +39,12 @@ class HomeViewModel(
         }
     }
 
+    fun createChat() {
+        viewModelScope.launch {
+            chatRepository.createChat("Chat #${System.currentTimeMillis() % 20 + 1}")
+        }
+    }
+
     private suspend fun updateChatList() {
         val chats = chatRepository.getChatsList(false)
         uiState = uiState.copy(isLoading = false, chats = chats)

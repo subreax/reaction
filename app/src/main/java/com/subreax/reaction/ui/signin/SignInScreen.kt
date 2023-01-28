@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -19,7 +20,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.subreax.reaction.data.auth.impl.FakeAuthRepository
+import com.subreax.reaction.R
 import com.subreax.reaction.ui.CustomButton
 import com.subreax.reaction.ui.CustomTextField
 import com.subreax.reaction.ui.theme.ReactionTheme
@@ -30,14 +31,40 @@ fun SignInScreen(
     onBackPressed: () -> Unit = {},
     onSignInDone: () -> Unit = {}
 ) {
-    val usernameFocusRequester = FocusRequester()
-    val signInState by signInViewModel.uiState.collectAsState()
-
-    val isSignInDone by signInViewModel.isSignInDone.collectAsState(false)
-    LaunchedEffect(isSignInDone) {
-        if (isSignInDone) {
+    val uiState = signInViewModel.uiState
+    
+    LaunchedEffect(uiState.isSignInDone) {
+        if (uiState.isSignInDone) {
             onSignInDone()
         }
+    }
+
+    SignInScreen(
+        username = signInViewModel.username,
+        password = signInViewModel.password,
+        onUsernameChanged = signInViewModel::updateUsername,
+        onPasswordChanged = signInViewModel::updatePassword,
+        onSignInClicked = signInViewModel::signIn,
+        onBackPressed = onBackPressed,
+        isLoading = uiState.isLoading,
+        errorMsg = uiState.errorMsg.value
+    )
+}
+
+@Composable
+fun SignInScreen(
+    username: String,
+    password: String,
+    onUsernameChanged: (String) -> Unit,
+    onPasswordChanged: (String) -> Unit,
+    onSignInClicked: () -> Unit,
+    onBackPressed: () -> Unit,
+    isLoading: Boolean,
+    errorMsg: String
+) {
+    val usernameFocusRequester = FocusRequester()
+    LaunchedEffect(Unit) {
+        usernameFocusRequester.requestFocus()
     }
 
     Surface(modifier = Modifier.fillMaxSize()) {
@@ -47,19 +74,19 @@ fun SignInScreen(
                 onClick = onBackPressed,
                 modifier = Modifier.padding(8.dp)
             ) {
-                Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Go back")
+                Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = stringResource(R.string.nav_back))
             }
 
             Column(
                 modifier = Modifier.padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Text("Enter your account")
+                Text(stringResource(R.string.enter_your_account))
 
                 CustomTextField(
-                    value = signInViewModel.username,
-                    onValueChange = signInViewModel::updateUsername,
-                    hint = "Username",
+                    value = username,
+                    onValueChange = onUsernameChanged,
+                    hint = stringResource(R.string.username),
                     modifier = Modifier
                         .fillMaxWidth()
                         .focusRequester(usernameFocusRequester),
@@ -69,9 +96,9 @@ fun SignInScreen(
                     ),
                 )
                 CustomTextField(
-                    value = signInViewModel.password,
-                    onValueChange = signInViewModel::updatePassword,
-                    hint = "Password",
+                    value = password,
+                    onValueChange = onPasswordChanged,
+                    hint = stringResource(R.string.password),
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Password,
@@ -80,27 +107,25 @@ fun SignInScreen(
                     visualTransformation = PasswordVisualTransformation()
                 )
 
-                if (signInState is SignInState.Error) {
-                    CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
-                        Text(
-                            (signInState as SignInState.Error).msg,
-                            fontSize = 14.sp,
-                            color = MaterialTheme.colors.error
-                        )
-                    }
+                if (errorMsg.isNotEmpty()) {
+                    Text(
+                        text = errorMsg,
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colors.error.copy(alpha = ContentAlpha.medium)
+                    )
                 }
 
                 CustomButton(
-                    text = "Sign in",
-                    onClick = signInViewModel::signIn,
+                    text = stringResource(id = R.string.sign_in),
+                    onClick = onSignInClicked,
                     modifier = Modifier
                         .align(CenterHorizontally)
                         .padding(bottom = 16.dp),
-                    enabled = signInState !is SignInState.Loading
+                    enabled = !isLoading
                 )
 
                 Text(
-                    text = "Forgot password?",
+                    text = stringResource(R.string.forgot_password),
                     modifier = Modifier
                         .align(CenterHorizontally)
                         .clickable { },
@@ -110,17 +135,21 @@ fun SignInScreen(
             }
         }
     }
-
-    /*SideEffect {
-        usernameFocusRequester.requestFocus()
-    }*/
 }
 
 @Preview(uiMode = UI_MODE_NIGHT_YES)
 @Composable
 fun SignInScreenPreview() {
-    val viewModel = SignInViewModel(FakeAuthRepository())
     ReactionTheme {
-        SignInScreen(viewModel)
+        SignInScreen(
+            username = "",
+            password = "",
+            onUsernameChanged = {},
+            onPasswordChanged = {},
+            onSignInClicked = {},
+            onBackPressed = {},
+            isLoading = false,
+            errorMsg = ""
+        )
     }
 }

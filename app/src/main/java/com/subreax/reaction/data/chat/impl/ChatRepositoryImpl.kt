@@ -76,7 +76,7 @@ class ChatRepositoryImpl(
             }
             _getChatMap()
                 .map { it.value }
-                .sortedBy { it.lastMessage?.sentTime ?: System.currentTimeMillis() }
+                .sortedByDescending { it.lastMessage?.sentTime ?: System.currentTimeMillis() }
         }
     }
 

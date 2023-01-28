@@ -6,36 +6,30 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.subreax.reaction.R
+import com.subreax.reaction.StringResource
 import com.subreax.reaction.api.ApiResult
+import com.subreax.reaction.toStringResource
 import com.subreax.reaction.data.auth.AuthRepository
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-sealed class SignInState {
-    object Nothing : SignInState()
-    object Loading : SignInState()
-    object Success : SignInState()
-    data class Error(val msg: String) : SignInState()
-}
+data class SignInUiState(
+    val isSignInDone: Boolean = false,
+    val isLoading: Boolean = false,
+    val errorMsg: StringResource = StringResource()
+)
 
 class SignInViewModel(
     private val authRepository: AuthRepository
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow<SignInState>(SignInState.Nothing)
-    val uiState = _uiState.asStateFlow()
+    var uiState by mutableStateOf(SignInUiState())
+        private set
 
     var username by mutableStateOf("")
         private set
 
     var password by mutableStateOf("")
         private set
-
-    private val _isSignInDone = MutableSharedFlow<Boolean>()
-    val isSignInDone: SharedFlow<Boolean>
-        get() = _isSignInDone
 
     fun updateUsername(username: String) {
         this.username = username.trim()
@@ -48,20 +42,19 @@ class SignInViewModel(
     fun signIn() {
         viewModelScope.launch {
             if (username.isEmpty()) {
-                _uiState.value = SignInState.Error("Ошибка: введите имя пользователя")
+                uiState = SignInUiState(errorMsg = R.string.err_enter_username.toStringResource())
             }
             else if (password.isEmpty()) {
-                _uiState.value = SignInState.Error("Ошибка: введите пароль")
+                uiState = SignInUiState(errorMsg = R.string.err_enter_password.toStringResource())
             }
             else {
-                _uiState.value = SignInState.Loading
+                uiState = SignInUiState(isLoading = true)
                 val result = authRepository.signIn(AuthRepository.SignInData(username, password))
                 if (result is ApiResult.Success) {
-                    _uiState.value = SignInState.Success
-                    _isSignInDone.emit(true)
+                    uiState = SignInUiState(isSignInDone = true)
                 }
                 else {
-                    _uiState.value = SignInState.Error(result.errorToString())
+                    uiState = SignInUiState(errorMsg = result.errorToString().toStringResource())
                 }
             }
         }
