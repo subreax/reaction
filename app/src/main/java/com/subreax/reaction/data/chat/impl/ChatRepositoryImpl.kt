@@ -11,6 +11,7 @@ import com.subreax.reaction.data.chat.Chat
 import com.subreax.reaction.data.chat.ChatRepository
 import com.subreax.reaction.data.chat.Message
 import com.subreax.reaction.data.user.UserRepository
+import com.subreax.reaction.putSynchronously
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -135,7 +136,7 @@ class ChatRepositoryImpl(
                         val chatDetailsDto =
                             api.getChatDetails(authRepository.getToken(), chatDto.id)
 
-                        outChats[chatDto.id] = Chat(
+                        _chats.putSynchronously(chatDto.id, Chat(
                             chatDto.id,
                             chatDto.avatar,
                             chatDto.title,
@@ -143,7 +144,7 @@ class ChatRepositoryImpl(
                             chatDto.isMuted,
                             chatDto.isPinned,
                             chatDetailsDto.membersCount
-                        )
+                        ))
                     }
                 }
             }

@@ -20,3 +20,9 @@ class StringResource(
 
 fun String.toStringResource(): StringResource = StringResource(str = this)
 fun Int.toStringResource(): StringResource = StringResource(strRes = this)
+
+fun <K, V> MutableMap<K, V>.putSynchronously(key: K, value: V) {
+    synchronized(this) {
+        put(key, value)
+    }
+}

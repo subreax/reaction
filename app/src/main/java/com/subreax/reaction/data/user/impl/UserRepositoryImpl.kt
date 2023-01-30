@@ -6,6 +6,7 @@ import com.subreax.reaction.api.User
 import com.subreax.reaction.api.safeApiCall
 import com.subreax.reaction.data.auth.AuthRepository
 import com.subreax.reaction.data.user.UserRepository
+import com.subreax.reaction.putSynchronously
 import kotlinx.coroutines.Dispatchers
 
 class UserRepositoryImpl(
@@ -20,7 +21,7 @@ class UserRepositoryImpl(
 
     override suspend fun getUserById(id: String): User {
         if (!_users.containsKey(id)) {
-            _users[id] = requestUser(id)
+            _users.putSynchronously(id, requestUser(id))
         }
 
         return _users[id]!!
