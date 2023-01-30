@@ -1,19 +1,17 @@
 package com.subreax.reaction.ui.components
 
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.Layout
-import androidx.compose.ui.text.*
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -71,7 +69,10 @@ fun Message(
     modifier: Modifier = Modifier
 ) {
     Surface(
-        modifier.clip(RoundedCornerShape(18.dp))
+        modifier = modifier
+            .shadow(elevation = 2.dp, shape = RoundedCornerShape(18.dp))
+            .clip(RoundedCornerShape(18.dp)),
+        elevation = 2.dp,
     ) {
         Column(
             modifier = Modifier

@@ -37,7 +37,7 @@ fun HomeScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = viewModel::createChat) {
+            FloatingActionButton(onClick = viewModel::createChat, modifier = Modifier.navigationBarsPadding()) {
                 Icon(imageVector = Icons.Filled.Edit, contentDescription = "Create a chat")
             }
         }

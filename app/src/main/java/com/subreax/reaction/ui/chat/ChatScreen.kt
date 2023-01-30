@@ -1,8 +1,6 @@
 package com.subreax.reaction.ui.chat
 
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
-import android.view.ViewTreeObserver
-import androidx.compose.foundation.gestures.stopScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -13,11 +11,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Mood
 import androidx.compose.material.icons.filled.Send
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -26,7 +26,6 @@ import com.subreax.reaction.api.User
 import com.subreax.reaction.data.chat.Message
 import com.subreax.reaction.ui.components.*
 import com.subreax.reaction.ui.theme.ReactionTheme
-import java.lang.Integer.max
 
 @Composable
 fun ChatScreen(
@@ -73,30 +72,33 @@ fun ChatScreen(
     onBackPressed: () -> Unit = {},
     onSendPressed: () -> Unit = {}
 ) {
-    Column(
+    Surface(
         modifier = Modifier
             .fillMaxSize()
             .imePadding()
+            .navigationBarsPadding()
     ) {
-        MyTopAppBar(
-            chatTitle = chatTitle,
-            avatar = avatar,
-            membersCount = membersCount,
-            onBackPressed = onBackPressed
-        )
-        LoadingOverlay(isLoading, modifier = Modifier.weight(1.0f)) {
-            MessagesList(
-                currentUserId = currentUserId,
-                messages = messages,
-                modifier = Modifier.weight(1.0f),
-                state = messagesListState
+        Column {
+            MyTopAppBar(
+                chatTitle = chatTitle,
+                avatar = avatar,
+                membersCount = membersCount,
+                onBackPressed = onBackPressed
+            )
+            LoadingOverlay(isLoading, modifier = Modifier.weight(1.0f)) {
+                MessagesList(
+                    currentUserId = currentUserId,
+                    messages = messages,
+                    modifier = Modifier.weight(1.0f),
+                    state = messagesListState
+                )
+            }
+            MessageInputPanel(
+                message = enteredMessage,
+                onMessageChanged = onEnteredMessageChanged,
+                onSendPressed = onSendPressed
             )
         }
-        MessageInputPanel(
-            message = enteredMessage,
-            onMessageChanged = onEnteredMessageChanged,
-            onSendPressed = onSendPressed
-        )
     }
 }
 
