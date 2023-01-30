@@ -122,6 +122,7 @@ fun MyTopAppBar(
                     )
             ) {
                 AutoAvatar(
+                    title = chatTitle,
                     url = avatar,
                     size = 40.dp,
                     modifier = Modifier.padding(end = 8.dp)
@@ -181,6 +182,7 @@ fun MessagesList(
             ) {
                 if (!isMyMsg) {
                     AutoAvatar(
+                        title = message.from.name,
                         url = message.from.avatar,
                         size = 32.dp,
                         modifier = Modifier.padding(top = 12.dp, end = 8.dp)

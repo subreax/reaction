@@ -109,6 +109,7 @@ private fun ChatGeneralInfo(
             verticalAlignment = Alignment.CenterVertically
         ) {
             AutoAvatar(
+                title = chatName,
                 url = null,
                 size = 64.dp,
                 modifier = Modifier.padding(end = 16.dp)
@@ -184,7 +185,12 @@ private fun MemberListItem(username: String, avatar: String?) {
     Row(
         modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically
     ) {
-        AutoAvatar(url = avatar, size = 48.dp, modifier = Modifier.padding(end = 12.dp))
+        AutoAvatar(
+            title = username,
+            url = avatar,
+            size = 48.dp,
+            modifier = Modifier.padding(end = 12.dp)
+        )
         Column {
             Text(
                 text = username,

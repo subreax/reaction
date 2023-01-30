@@ -47,11 +47,7 @@ fun ChatListItem(
         //modifier = Modifier.padding(8.dp)
         modifier = modifier.padding(8.dp)
     ) {
-        if (avatar != null) {
-            Avatar(avatar, size = 56.dp)
-        } else {
-            AvatarPlaceholder(size = 56.dp)
-        }
+        AutoAvatar(title = chatName, url = avatar, size = 56.dp)
 
         ChatListItemBody(
             chatName = chatName,

@@ -68,7 +68,7 @@ fun JoinChatScreen(
             modifier = Modifier.padding(horizontal = 16.dp)
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                AutoAvatar(avatar, size = 96.dp)
+                AutoAvatar(name, avatar, size = 96.dp)
                 Text(
                     text = name,
                     style = MaterialTheme.typography.h4.copy(fontWeight = FontWeight.Light),
