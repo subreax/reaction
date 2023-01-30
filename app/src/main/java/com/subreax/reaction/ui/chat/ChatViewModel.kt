@@ -26,6 +26,7 @@ data class ChatUiState(
 class ChatViewModel(
     val userId: String,
     private val chatId: String,
+    private val navToDetailsScreen: () -> Unit,
     private val chatRepository: ChatRepository
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(ChatUiState(true, "", null, 0, emptyList()))
@@ -47,7 +48,7 @@ class ChatViewModel(
                     true,
                     chat.title,
                     chat.avatar,
-                    chat.membersCount,
+                    chat.members.size,
                     emptyList()
                 )
 
@@ -91,6 +92,10 @@ class ChatViewModel(
         }
     }
 
+    fun navigateToDetailsScreen() {
+        navToDetailsScreen()
+    }
+
     private suspend fun getMessages(): List<Message> {
         return withContext(Dispatchers.IO) {
             chatRepository.getMessages(chatId)
@@ -101,10 +106,11 @@ class ChatViewModel(
     class Factory(
         private val userId: String,
         private val chatId: String,
+        private val navToDetailsScreen: () -> Unit,
         private val chatRepository: ChatRepository
     ) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return ChatViewModel(userId, chatId, chatRepository) as T
+            return ChatViewModel(userId, chatId, navToDetailsScreen, chatRepository) as T
         }
     }
 }

@@ -39,7 +39,7 @@ class JoinChatViewModel(
                     uiState = JoinScreenUiState.Data(
                         chatName = chat.title,
                         avatar = chat.avatar,
-                        membersCount = chat.membersCount,
+                        membersCount = chat.members.size,
                         isJoining = false
                     )
                 } else {

@@ -1,22 +1,25 @@
 package com.subreax.reaction.ui.chat
 
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Mood
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -24,7 +27,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.subreax.reaction.api.User
 import com.subreax.reaction.data.chat.Message
-import com.subreax.reaction.ui.components.*
+import com.subreax.reaction.ui.components.AutoAvatar
+import com.subreax.reaction.ui.components.LoadingOverlay
+import com.subreax.reaction.ui.components.Message
 import com.subreax.reaction.ui.theme.ReactionTheme
 
 @Composable
@@ -34,14 +39,6 @@ fun ChatScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val messagesListState = rememberLazyListState()
-
-    /*LaunchedEffect(uiState.messages.size) {
-        if (messagesListState.firstVisibleItemScrollOffset != 0) {
-            messagesListState.stopScroll()
-        }
-
-        //messagesListState.scrollToItem(max(uiState.messages.size - 1, 0))
-    }*/
 
     ChatScreen(
         isLoading = uiState.isLoading,
@@ -54,7 +51,8 @@ fun ChatScreen(
         onEnteredMessageChanged = viewModel::updateEnteredMessage,
         onBackPressed = onBackPressed,
         messagesListState = messagesListState,
-        onSendPressed = viewModel::sendMessage
+        onSendPressed = viewModel::sendMessage,
+        onOpenChatDetailsPressed = viewModel::navigateToDetailsScreen
     )
 }
 
@@ -70,7 +68,8 @@ fun ChatScreen(
     onEnteredMessageChanged: (String) -> Unit,
     messagesListState: LazyListState,
     onBackPressed: () -> Unit = {},
-    onSendPressed: () -> Unit = {}
+    onSendPressed: () -> Unit = {},
+    onOpenChatDetailsPressed: () -> Unit = {}
 ) {
     Surface(
         modifier = Modifier
@@ -83,7 +82,8 @@ fun ChatScreen(
                 chatTitle = chatTitle,
                 avatar = avatar,
                 membersCount = membersCount,
-                onBackPressed = onBackPressed
+                onBackPressed = onBackPressed,
+                onOpenChatDetailsPressed = onOpenChatDetailsPressed
             )
             LoadingOverlay(isLoading, modifier = Modifier.weight(1.0f)) {
                 MessagesList(
@@ -106,24 +106,34 @@ fun ChatScreen(
 fun MyTopAppBar(
     chatTitle: String, avatar: String?,
     membersCount: Int,
-    onBackPressed: () -> Unit
+    onBackPressed: () -> Unit,
+    onOpenChatDetailsPressed: () -> Unit
 ) {
     com.google.accompanist.insets.ui.TopAppBar(
         title = {
-            if (avatar != null) {
-                Avatar(url = avatar, size = 40.dp)
-            } else {
-                AvatarPlaceholder(size = 40.dp)
-            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable(
+                        interactionSource = MutableInteractionSource(),
+                        indication = null,
+                        onClick = onOpenChatDetailsPressed
+                    )
+            ) {
+                AutoAvatar(
+                    url = avatar,
+                    size = 40.dp,
+                    modifier = Modifier.padding(end = 8.dp)
+                )
 
-            Spacer(modifier = Modifier.width(8.dp))
-            Column {
-                Text(chatTitle, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
+                Column {
+                    Text(chatTitle, fontSize = 16.sp, fontWeight = FontWeight.Bold)
                     Text(
                         "участников: $membersCount",
                         fontSize = 14.sp,
-                        fontWeight = FontWeight.Normal
+                        fontWeight = FontWeight.Normal,
+                        color = LocalContentColor.current.copy(alpha = ContentAlpha.medium)
                     )
                 }
             }

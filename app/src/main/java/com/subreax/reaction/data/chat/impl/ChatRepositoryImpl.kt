@@ -1,10 +1,7 @@
 package com.subreax.reaction.data.chat.impl
 
 import android.util.Log
-import com.subreax.reaction.api.ApiResult
-import com.subreax.reaction.api.BackendService
-import com.subreax.reaction.api.safeApiCall
-import com.subreax.reaction.api.unsafeApiCall
+import com.subreax.reaction.api.*
 import com.subreax.reaction.data.SocketService
 import com.subreax.reaction.data.auth.AuthRepository
 import com.subreax.reaction.data.chat.Chat
@@ -122,6 +119,22 @@ class ChatRepositoryImpl(
         return _getChatMap()[chatId] != null
     }
 
+    override suspend fun toggleNotifications(chatId: String, enabled: Boolean) {
+        val token = authRepository.getToken()
+        val chatPtr = ChatPointer1Dto(chatId, authRepository.getUserId())
+        if (enabled) {
+            unsafeApiCall { api.unmuteChat(token, chatPtr) }
+        }
+        else {
+            unsafeApiCall { api.muteChat(token, chatPtr) }
+        }
+
+        _chats[chatId] = _chats[chatId]?.copy(
+            isMuted = !enabled
+        ) ?: return
+        _onChatsChanged.emit(0)
+    }
+
     private suspend fun _requestChats(outChats: MutableMap<String, Chat>) {
         withContext(Dispatchers.IO) {
             outChats.clear()
@@ -136,14 +149,18 @@ class ChatRepositoryImpl(
                         val chatDetailsDto =
                             api.getChatDetails(authRepository.getToken(), chatDto.id)
 
+                        val members = chatDetailsDto.members.map {
+                            userRepository.getUserById(it.userId)!!
+                        }
+
                         _chats.putSynchronously(chatDto.id, Chat(
                             chatDto.id,
                             chatDto.avatar,
                             chatDto.title,
+                            members,
                             lastMessage,
                             chatDto.isMuted,
                             chatDto.isPinned,
-                            chatDetailsDto.membersCount
                         ))
                     }
                 }
@@ -163,10 +180,10 @@ class ChatRepositoryImpl(
                         chatId,
                         result.value.avatar,
                         result.value.title,
+                        emptyList(),
                         null,
                         result.value.isMuted,
                         result.value.isPinned,
-                        result.value.membersCount
                     )
                 }
                 else -> {

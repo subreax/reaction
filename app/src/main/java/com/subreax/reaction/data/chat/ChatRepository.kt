@@ -16,10 +16,10 @@ data class Chat(
     val id: String,
     val avatar: String?,
     val title: String,
+    val members: List<User>,
     val lastMessage: Message?,
     val isMuted: Boolean,
-    val isPinned: Boolean,
-    val membersCount: Int,
+    val isPinned: Boolean
 )
 
 
@@ -32,6 +32,7 @@ interface ChatRepository {
     suspend fun joinChat(chatId: String)
     suspend fun leaveChat(chatId: String)
     suspend fun isUserAMemberOfTheChat(chatId: String): Boolean
+    suspend fun toggleNotifications(chatId: String, enabled: Boolean)
 
     val onMessagesChanged: Flow<Chat>
     val onChatsChanged: Flow<Int>

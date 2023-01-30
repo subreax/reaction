@@ -10,6 +10,8 @@ import com.subreax.reaction.data.AppContainer
 import com.subreax.reaction.ui.*
 import com.subreax.reaction.ui.chat.ChatScreen
 import com.subreax.reaction.ui.chat.ChatViewModel
+import com.subreax.reaction.ui.chatdetails.ChatDetailsScreen
+import com.subreax.reaction.ui.chatdetails.ChatDetailsViewModel
 import com.subreax.reaction.ui.home.HomeScreen
 import com.subreax.reaction.ui.home.HomeViewModel
 import com.subreax.reaction.ui.joinchat.JoinChatScreen
@@ -93,7 +95,16 @@ fun ReactionNavHost(
 
             ChatScreen(
                 viewModel = viewModel(
-                    factory = ChatViewModel.Factory(userId, chatId, appContainer.chatRepository)
+                    factory = ChatViewModel.Factory(
+                        userId,
+                        chatId,
+                        navToDetailsScreen = {
+                            navController.navigate(
+                                "${Screen.ChatDetails.route}/${chatId}"
+                            )
+                        },
+                        appContainer.chatRepository
+                    )
                 ),
                 // todo: fix back nav button behaviour to this
                 onBackPressed = {
@@ -125,6 +136,25 @@ fun ReactionNavHost(
                                 popUpTo(currentRoute) { inclusive = true }
                             }
                         }
+                    )
+                )
+            )
+        }
+
+        composable(
+            route = Screen.ChatDetails.routeWithArgs,
+            arguments = Screen.ChatDetails.args
+        ) { navBackStackEntry ->
+            val chatId = navBackStackEntry.arguments?.getString(Screen.ChatDetails.chatIdArg) ?: "chat_id_is_empty"
+
+            ChatDetailsScreen(
+                chatDetailsViewModel = viewModel(
+                    factory = ChatDetailsViewModel.Factory(
+                        chatId,
+                        { navController.popBackStack() },
+                        {  },
+                        {  },
+                        appContainer.chatRepository
                     )
                 )
             )

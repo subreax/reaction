@@ -41,6 +41,19 @@ interface BackendService {
         @Header("Authorization") token: String,
         @Path("chatId") chatId: String
     ): ChatMessagesDto
+
+
+    @PUT("room/muteRoom")
+    suspend fun muteChat(
+        @Header("Authorization") token: String,
+        @Body chatPtr: ChatPointer1Dto
+    )
+
+    @PUT("room/unmuteRoom")
+    suspend fun unmuteChat(
+        @Header("Authorization") token: String,
+        @Body chatPtr: ChatPointer1Dto
+    )
 }
 
 
@@ -169,3 +182,10 @@ data class User(
     val lastActivity: Long
 )
 
+data class ChatPointer1Dto(
+    @SerializedName("roomId")
+    val chatId: String,
+
+    @SerializedName("userId")
+    val userId: String
+)

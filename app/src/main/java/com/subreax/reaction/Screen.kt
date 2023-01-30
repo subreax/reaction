@@ -16,6 +16,13 @@ sealed class Screen(val route: String) {
             navArgument(chatIdArg) { type = NavType.StringType }
         )
     }
+    object ChatDetails : Screen("chat_details_screen") {
+        val chatIdArg = "chatId"
+        val routeWithArgs = "$route/{$chatIdArg}"
+        val args = listOf(
+            navArgument(chatIdArg) { type = NavType.StringType }
+        )
+    }
     object JoinChat : Screen("join_chat") {
         val chatIdArg = "chatId"
         val routeWithArgs = "$route/{$chatIdArg}"
