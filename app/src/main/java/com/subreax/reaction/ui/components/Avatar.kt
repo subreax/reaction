@@ -33,7 +33,7 @@ fun Avatar(url: String, size: Dp, modifier: Modifier = Modifier) {
 fun AvatarPlaceholder(title: String, size: Dp, modifier: Modifier = Modifier) {
     val sum = title.sumOf { it.code } * 55 + 15
     val hue = (sum.mod(360)).toFloat()
-    val hueOffset = (hue + 45).mod(360.0f)
+    val hueOffset = (hue + 30).mod(360.0f)
     val colorStart = Color.hsv(hue, 0.6f, 0.9f)
     val colorEnd = Color.hsv(hueOffset, 0.6f, 0.7f)
 
