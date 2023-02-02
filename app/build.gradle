@@ -62,23 +62,31 @@ dependencies {
     debugImplementation "androidx.compose.ui:ui-tooling:$compose_ui_version"
     debugImplementation "androidx.compose.ui:ui-test-manifest:$compose_ui_version"
 
+    // navigation
     implementation "androidx.navigation:navigation-fragment-ktx:$nav_version"
     implementation "androidx.navigation:navigation-ui-ktx:$nav_version"
-    // Jetpack Compose Integration
     implementation "androidx.navigation:navigation-compose:$nav_version"
 
+    // retrofit
     implementation 'com.squareup.retrofit2:retrofit:2.9.0'
     implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
     implementation "com.squareup.okhttp3:okhttp:4.10.0"
 
+    // socketio
     implementation ('io.socket:socket.io-client:2.0.0') {
         exclude group: 'org.json', module: 'json'
     }
 
+    // material icons
     implementation "androidx.compose.material:material-icons-extended:$compose_ui_version"
 
+    // coil
     implementation "io.coil-kt:coil-compose:2.2.0"
 
+    // accompanist
     implementation "com.google.accompanist:accompanist-systemuicontroller:0.28.0"
     implementation "com.google.accompanist:accompanist-insets-ui:0.28.0"
+
+    // zxing
+    implementation 'com.google.zxing:core:3.5.1'
 }

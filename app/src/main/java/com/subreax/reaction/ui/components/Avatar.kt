@@ -16,6 +16,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.subreax.reaction.colorGradientFor
 import com.subreax.reaction.ui.theme.ReactionTheme
 
 @Composable
@@ -31,15 +32,8 @@ fun Avatar(url: String, size: Dp, modifier: Modifier = Modifier) {
 
 @Composable
 fun AvatarPlaceholder(title: String, size: Dp, modifier: Modifier = Modifier) {
-    val sum = title.sumOf { it.code } * 55 + 15
-    val hue = (sum.mod(360)).toFloat()
-    val hueOffset = (hue + 30).mod(360.0f)
-    val colorStart = Color.hsv(hue, 0.6f, 0.9f)
-    val colorEnd = Color.hsv(hueOffset, 0.6f, 0.7f)
-
-    val brush = Brush.verticalGradient(
-        listOf(colorStart, colorEnd)
-    )
+    val colors = colorGradientFor(title)
+    val brush = Brush.verticalGradient(colors)
 
     val fontSize = with(LocalDensity.current) {
         (size * 0.333f).toSp()

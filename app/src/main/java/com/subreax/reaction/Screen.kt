@@ -30,4 +30,11 @@ sealed class Screen(val route: String) {
             navDeepLink { uriPattern = "reaction://join/{$chatIdArg}" }
         )
     }
+    object ChatShare : Screen("share_chat_screen") {
+        val chatIdArg = "chatId"
+        val routeWithArgs = "$route/{$chatIdArg}"
+        val args = listOf(
+            navArgument(chatIdArg) { type = NavType.StringType }
+        )
+    }
 }

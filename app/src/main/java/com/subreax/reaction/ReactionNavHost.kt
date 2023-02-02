@@ -7,11 +7,13 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.subreax.reaction.data.AppContainer
-import com.subreax.reaction.ui.*
+import com.subreax.reaction.ui.WelcomeScreen
 import com.subreax.reaction.ui.chat.ChatScreen
 import com.subreax.reaction.ui.chat.ChatViewModel
 import com.subreax.reaction.ui.chatdetails.ChatDetailsScreen
 import com.subreax.reaction.ui.chatdetails.ChatDetailsViewModel
+import com.subreax.reaction.ui.chatshare.ChatShareScreen
+import com.subreax.reaction.ui.chatshare.ChatShareViewModel
 import com.subreax.reaction.ui.home.HomeScreen
 import com.subreax.reaction.ui.home.HomeViewModel
 import com.subreax.reaction.ui.joinchat.JoinChatScreen
@@ -150,13 +152,34 @@ fun ReactionNavHost(
             ChatDetailsScreen(
                 chatDetailsViewModel = viewModel(
                     factory = ChatDetailsViewModel.Factory(
-                        chatId,
-                        { navController.popBackStack() },
-                        {  },
-                        {  },
+                        chatId = chatId,
+                        navBack = { navController.popBackStack() },
+                        navToChatSharing = {
+                            navController.navigate("${Screen.ChatShare.route}/$chatId")
+                        },
+                        navToChatEditor = { },
                         appContainer.chatRepository
                     )
                 )
+            )
+        }
+
+        composable(
+            route = Screen.ChatShare.routeWithArgs,
+            arguments = Screen.ChatShare.args
+        ) { navBackStackEntry ->
+            val args = navBackStackEntry.arguments!!
+            val chatId = args.getString(Screen.ChatShare.chatIdArg) ?: ""
+
+            ChatShareScreen(
+                viewModel(
+                    factory = ChatShareViewModel.Factory(
+                        chatId,
+                        appContainer.chatRepository
+                    )
+                ),
+                //colors = listOf(Color(0xFF79EB71), Color(0xFF257AC2)),
+                onBackPressed = { navController.popBackStack() }
             )
         }
     }

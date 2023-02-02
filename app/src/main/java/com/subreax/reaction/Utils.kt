@@ -2,6 +2,7 @@ package com.subreax.reaction
 
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 
 // Returns strRes if provided
@@ -25,4 +26,13 @@ fun <K, V> MutableMap<K, V>.putSynchronously(key: K, value: V) {
     synchronized(this) {
         put(key, value)
     }
+}
+
+fun colorGradientFor(str: String): List<Color> {
+    val sum = str.sumOf { it.code } * 55 + 15
+    val hue = (sum.mod(360)).toFloat()
+    val hueOffset = (hue + 30).mod(360.0f)
+    val colorStart = Color.hsv(hue, 0.6f, 0.9f)
+    val colorEnd = Color.hsv(hueOffset, 0.6f, 0.7f)
+    return listOf(colorStart, colorEnd)
 }
