@@ -6,22 +6,26 @@ import com.subreax.reaction.api.User
 import com.subreax.reaction.api.safeApiCall
 import com.subreax.reaction.data.auth.AuthRepository
 import com.subreax.reaction.data.user.UserRepository
-import com.subreax.reaction.putSynchronously
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 class UserRepositoryImpl(
     private val api: BackendService,
     private val authRepository: AuthRepository
 ) : UserRepository {
     private val _users: MutableMap<String, User> = HashMap()
+    private val _mutex = Mutex()
 
     override suspend fun getCurrentUser(): User {
         return getUserById(authRepository.getUserId())
     }
 
     override suspend fun getUserById(id: String): User {
-        if (!_users.containsKey(id)) {
-            _users.putSynchronously(id, requestUser(id))
+        _mutex.withLock {
+            if (!_users.containsKey(id)) {
+                _users[id] = requestUser(id)
+            }
         }
 
         return _users[id]!!

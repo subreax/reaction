@@ -1,8 +1,6 @@
 package com.subreax.reaction
 
-import android.content.res.Resources
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -12,12 +10,7 @@ import androidx.core.view.WindowCompat
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
-import com.subreax.reaction.data.SocketService
 import com.subreax.reaction.ui.theme.ReactionTheme
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 
 
 class MainActivity : ComponentActivity() {
@@ -37,12 +30,6 @@ class MainActivity : ComponentActivity() {
         }*/
 
         val appContainer = (application as ReactionApplication).appContainer
-
-        if (savedInstanceState == null) {
-            runBlocking {
-                appContainer.authRepository.init(applicationContext)
-            }
-        }
 
         setContent {
             val systemUiController = rememberSystemUiController()
@@ -66,10 +53,5 @@ class MainActivity : ComponentActivity() {
                 )
             }
         }
-    }
-
-
-    private fun toDp(px: Int): Int {
-        return (px / Resources.getSystem().displayMetrics.density).toInt()
     }
 }
