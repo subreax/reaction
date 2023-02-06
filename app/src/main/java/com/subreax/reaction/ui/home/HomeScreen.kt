@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.subreax.reaction.R
@@ -71,7 +72,11 @@ fun ChatList(
     modifier: Modifier = Modifier,
     onChatClicked: (Chat) -> Unit = {}
 ) {
-    LazyColumn(modifier = modifier) {
+    val navBarsPadding = with(LocalDensity.current) {
+        (WindowInsets.navigationBars.getBottom(this) + WindowInsets.navigationBars.getTop(this)).toDp()
+    }
+
+    LazyColumn(modifier = modifier, contentPadding = PaddingValues(bottom = navBarsPadding)) {
         items(chats) { chat ->
             ChatListItem(
                 chatName = chat.title,
