@@ -1,13 +1,11 @@
 package com.subreax.reaction.ui.chat
 
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -71,7 +69,7 @@ fun ChatScreen(
     onSendPressed: () -> Unit = {},
     onOpenChatDetailsPressed: () -> Unit = {}
 ) {
-    Surface(
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .imePadding()
@@ -155,6 +153,21 @@ fun MessagesList(
     modifier: Modifier = Modifier,
     state: LazyListState
 ) {
+    val myMessageRowModifier = Modifier
+        .padding(top = 8.dp, start = 70.dp)
+        .fillMaxWidth()
+
+    val otherMessageRowModifier = Modifier
+        .padding(top = 8.dp, end = 70.dp)
+        .fillMaxWidth()
+
+    val avatarModifier = Modifier.padding(top = 12.dp, end = 8.dp)
+
+    val messageModifier = Modifier
+        .clip(RoundedCornerShape(18.dp))
+        .background(MaterialTheme.colors.surface)
+        .padding(horizontal = 12.dp, vertical = 8.dp)
+
     LazyColumn(
         modifier = modifier,
         contentPadding = PaddingValues(8.dp),
@@ -166,18 +179,14 @@ fun MessagesList(
             val isMyMsg = currentUserId == message.from.id
             val author = if (isMyMsg) null else message.from.name
 
-            val padding =
-                if (isMyMsg)
-                    PaddingValues(top = 8.dp, start = 70.dp)
-                else
-                    PaddingValues(top = 8.dp, end = 70.dp)
-
             val arrangement = if (isMyMsg) Arrangement.End else Arrangement.Start
+            val rowModifier = if (isMyMsg)
+                myMessageRowModifier
+            else
+                otherMessageRowModifier
 
             Row(
-                modifier = Modifier
-                    .padding(padding)
-                    .fillMaxWidth(),
+                modifier = rowModifier,
                 horizontalArrangement = arrangement
             ) {
                 if (!isMyMsg) {
@@ -185,7 +194,7 @@ fun MessagesList(
                         title = message.from.name,
                         url = message.from.avatar,
                         size = 32.dp,
-                        modifier = Modifier.padding(top = 12.dp, end = 8.dp)
+                        modifier = avatarModifier
                     )
                 }
 
@@ -193,7 +202,7 @@ fun MessagesList(
                     author = author,
                     content = message.content,
                     sentTime = message.sentTime,
-                    //modifier = Modifier.padding(top = 8.dp)
+                    modifier = messageModifier
                 )
             }
         }

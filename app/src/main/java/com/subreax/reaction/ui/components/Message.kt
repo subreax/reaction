@@ -1,65 +1,122 @@
 package com.subreax.reaction.ui.components
 
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
+import android.graphics.Paint
+import android.text.StaticLayout
+import android.text.TextPaint
+import android.util.Log
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.*
+import androidx.compose.material.ContentAlpha
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.subreax.reaction.StaticLayout_createInstance
 import com.subreax.reaction.ui.theme.ReactionTheme
 import java.text.SimpleDateFormat
-import kotlin.math.max
+import kotlin.math.roundToInt
 
 @Composable
-fun MessageLayout(
-    message: @Composable () -> Unit,
+fun MessageTextAndInfo(
+    text: String,
     info: @Composable () -> Unit,
     modifier: Modifier = Modifier,
-    horizontalGap: Dp = 0.dp,
-    verticalGap: Dp = 0.dp
+    textColor: Color = MaterialTheme.colors.onSurface
 ) {
-    Layout(modifier = modifier, content = { message(); info() }) { measurables, constraints ->
-        check(measurables.size == 2)
+    val textSz = with(LocalDensity.current) {
+        MaterialTheme.typography.body1.fontSize.toPx()
+    }
 
-        val placeables = measurables.map {
-            it.measure(constraints)
-        }
-        val msg = placeables[0]
-        val info = placeables[1]
+    val textPaint = TextPaint().apply {
+        textSize = textSz
+        style = Paint.Style.FILL
+        color = textColor.toArgb()
+        isAntiAlias = true
+    }
 
+    var staticLayout: StaticLayout? = null
+
+    Layout(
+        modifier = modifier
+            .drawWithCache {
+                onDrawBehind {
+                    drawIntoCanvas {
+                        staticLayout?.draw(it.nativeCanvas)
+                            ?: Log.e(
+                                "Message",
+                                "Failed to draw message because staticLayout = null"
+                            )
+                    }
+                }
+            },
+        content = info
+    ) { measurables, constraints ->
+        val maxWidth = constraints.maxWidth
+        val placeables = measurables.map { it.measure(constraints) }
+        val info = placeables[0]
+
+        val sl = StaticLayout_createInstance(text, constraints.maxWidth, textPaint)
+        staticLayout = sl
+
+        val textWidth = sl.measureTextWidth(text, textPaint)
+        val lastLineWidth = sl.measureLastLineWidth(text, textPaint)
+
+        var width = textWidth
+        var height = sl.height
         var infoX = 0
         var infoY = 0
-
-        var width = msg.width + horizontalGap.roundToPx() + info.width
-        var height = msg.height
-        infoX = msg.width + horizontalGap.roundToPx()
-        infoY = height - info.height
-
-        if (width > constraints.maxWidth) {
-            width = max(msg.width, info.width)
-            height = msg.height + verticalGap.roundToPx() + info.height
-
+        if (lastLineWidth + info.width < maxWidth) {
+            infoY = height - info.height
+            if (sl.lineCount == 1) {
+                infoX = lastLineWidth
+                width += info.width
+            } else {
+                infoX = width - info.width
+            }
+        } else {
             infoX = width - info.width
-            infoY = msg.height + verticalGap.roundToPx()
+            infoY = height
+            height += info.height
         }
 
         layout(width, height) {
-            msg.placeRelative(x = 0, y = 0)
-            info.placeRelative(x = infoX, y = infoY)
+            info.placeRelative(infoX, infoY)
         }
     }
 }
 
+private fun StaticLayout.measureTextWidth(text: CharSequence, textPaint: TextPaint): Int {
+    var width = 0.0f
+    var lineStartIdx = 0
+    for (line in 0 until lineCount) {
+        val lineEndIdx = getLineVisibleEnd(line)
+        val lineWidth = textPaint.measureText(text, lineStartIdx, lineEndIdx)
+        if (width < lineWidth) {
+            width = lineWidth
+        }
+        lineStartIdx = lineEndIdx
+    }
+    return width.roundToInt()
+}
+
+private fun StaticLayout.measureLastLineWidth(text: CharSequence, textPaint: TextPaint): Int {
+    return textPaint.measureText(text, getLineStart(lineCount - 1), text.length).roundToInt()
+}
+
+
+private val messageInfoModifier = Modifier.padding(start = 8.dp)
 
 @Composable
 fun Message(
@@ -68,41 +125,31 @@ fun Message(
     sentTime: Long,
     modifier: Modifier = Modifier
 ) {
-    Surface(
-        modifier = modifier
-            .shadow(elevation = 2.dp, shape = RoundedCornerShape(18.dp))
-            .clip(RoundedCornerShape(18.dp)),
-        elevation = 2.dp,
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(horizontal = 12.dp, vertical = 8.dp)
-        ) {
-            if (author != null) {
-                Text(
-                    text = author,
-                    style = MaterialTheme.typography.body1.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 12.sp
-                    ),
-                    color = MaterialTheme.colors.primary
-                )
-            }
-
-            MessageLayout(
-                message = { Text(content) },
-                info = {
-                    CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.medium) {
-                        Text(
-                            text = SimpleDateFormat.getTimeInstance(SimpleDateFormat.SHORT)
-                                .format(sentTime),
-                            fontSize = 10.sp,
-                        )
-                    }
-                },
-                horizontalGap = 6.dp
+    Column(modifier) {
+        if (author != null) {
+            Text(
+                text = author,
+                style = MaterialTheme.typography.body1.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 12.sp
+                ),
+                color = MaterialTheme.colors.primary
             )
         }
+
+        MessageTextAndInfo(
+            text = content,
+            info = {
+                Text(
+                    text = formatTime(sentTime),
+                    modifier = messageInfoModifier,
+                    style = MaterialTheme.typography.body1.copy(
+                        fontSize = 10.sp,
+                        color = MaterialTheme.colors.onSurface.copy(alpha = ContentAlpha.medium)
+                    )
+                )
+            }
+        )
     }
 }
 

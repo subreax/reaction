@@ -1,9 +1,7 @@
 package com.subreax.reaction.ui.chatshare
 
 import android.graphics.Typeface
-import android.os.Build
 import android.text.Layout
-import android.text.StaticLayout
 import android.text.TextPaint
 import android.text.TextUtils
 import androidx.compose.foundation.background
@@ -32,6 +30,7 @@ import androidx.compose.ui.zIndex
 import androidx.core.graphics.withSave
 import com.google.zxing.common.BitMatrix
 import com.subreax.reaction.R
+import com.subreax.reaction.StaticLayout_createInstance
 import com.subreax.reaction.colorGradientFor
 import com.subreax.reaction.ui.components.AutoAvatar
 import java.lang.Float.min
@@ -166,25 +165,14 @@ private fun drawTextMask(canvas: Canvas, text: String, y: Float, width: Float, h
         isAntiAlias = true
     }
 
-    val staticLayout = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-        StaticLayout.Builder
-            .obtain(text, 0, text.length, textPaint, width.toInt())
-            .setAlignment(Layout.Alignment.ALIGN_CENTER)
-            .setEllipsize(TextUtils.TruncateAt.END)
-            .setMaxLines(1)
-            .build()
-    } else {
-        StaticLayout(
-            text,
-            0, text.length,
-            textPaint,
-            width.toInt(),
-            Layout.Alignment.ALIGN_CENTER,
-            1.0f, 0.0f,
-            false,
-            TextUtils.TruncateAt.END, width.toInt()
-        )
-    }
+    val staticLayout = StaticLayout_createInstance(
+        text = text,
+        width = width.toInt(),
+        textPaint = textPaint,
+        maxLines = 1,
+        alignment =  Layout.Alignment.ALIGN_CENTER,
+        ellipsize = TextUtils.TruncateAt.END
+    )
 
     canvas.nativeCanvas.withSave {
         val cx = (this.width - width) / 2
