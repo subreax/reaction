@@ -22,7 +22,11 @@ class ChatRepositoryImpl(
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
 
     // chatId - chat
-    private var _chats = mutableMapOf<String, Chat>()
+    private val _chats = mutableMapOf<String, Chat>()
+
+    // chatId - list of members
+    private val _chatMembers = mutableMapOf<String, List<User>>()
+
     private var _isChatsLoaded = false
 
     // chatId - message
@@ -80,6 +84,18 @@ class ChatRepositoryImpl(
 
     override suspend fun getChatById(chatId: String): Chat? {
         return _getChatMap()[chatId] ?: _requestChat(chatId)
+    }
+
+    override suspend fun getChatMembers(chatId: String): List<User> {
+        if (!_chatMembers.containsKey(chatId)) {
+            val members = unsafeApiCall { api.getChatMembers(authRepository.getToken(), chatId) }
+            val userList = members.map {
+                userRepository.getUserById(it.userId)!!
+            }
+            _chatMembers[chatId] = userList
+        }
+
+        return _chatMembers[chatId]!!
     }
 
     override suspend fun getMessages(chatId: String): List<Message> {
@@ -142,45 +158,34 @@ class ChatRepositoryImpl(
                 api.getChatList(authRepository.getToken())
             }
 
-            coroutineScope {
-                for (chatDto in chatsDto) {
-                    launch {
-                        val lastMessage = chatDto.lastMessage?.toMessage(userRepository)
-                        val chatDetailsDto =
-                            api.getChatDetails(authRepository.getToken(), chatDto.id)
+            for (chatDto in chatsDto) {
+                val lastMessage = chatDto.lastMessage?.toMessage(userRepository)
 
-                        val members = chatDetailsDto.members.map {
-                            userRepository.getUserById(it.userId)!!
-                        }
-
-                        _chats.putSynchronously(chatDto.id, Chat(
-                            chatDto.id,
-                            chatDto.avatar,
-                            chatDto.title,
-                            members,
-                            lastMessage,
-                            chatDto.isMuted,
-                            chatDto.isPinned,
-                        ))
-                    }
-                }
+                _chats.putSynchronously(chatDto.id, Chat(
+                    chatDto.id,
+                    chatDto.avatar,
+                    chatDto.title,
+                    chatDto.membersCount,
+                    lastMessage,
+                    chatDto.isMuted,
+                    chatDto.isPinned,
+                ))
             }
-
-            _onChatsChanged.emit(0)
         }
+        _onChatsChanged.emit(0)
     }
 
-    // todo: finish it when api will change
     private suspend fun _requestChat(chatId: String): Chat? {
         return withContext(Dispatchers.IO) {
             val result = safeApiCall { api.getChatDetails(authRepository.getToken(), chatId) }
             return@withContext when (result) {
                 is ApiResult.Success -> {
+                    Log.d("ChatRepositoryImpl", "Invite to: $result")
                     Chat(
                         chatId,
                         result.value.avatar,
                         result.value.title,
-                        emptyList(),
+                        result.value.membersCount,
                         null,
                         result.value.isMuted,
                         result.value.isPinned,

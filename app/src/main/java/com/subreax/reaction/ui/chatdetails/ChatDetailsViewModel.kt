@@ -67,7 +67,7 @@ class ChatDetailsViewModel(
 
             uiState = ChatDetailsUiState(
                 chat.title,
-                chat.members
+                chatRepository.getChatMembers(chatId)
             )
             isNotificationsEnabled = !chat.isMuted
         }

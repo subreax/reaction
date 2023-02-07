@@ -48,7 +48,7 @@ class ChatViewModel(
                     true,
                     chat.title,
                     chat.avatar,
-                    chat.members.size,
+                    chat.membersCount,
                     emptyList()
                 )
 

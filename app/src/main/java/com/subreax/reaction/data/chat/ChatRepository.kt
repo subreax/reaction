@@ -16,7 +16,7 @@ data class Chat(
     val id: String,
     val avatar: String?,
     val title: String,
-    val members: List<User>,
+    val membersCount: Int,
     val lastMessage: Message?,
     val isMuted: Boolean,
     val isPinned: Boolean
@@ -26,6 +26,7 @@ data class Chat(
 interface ChatRepository {
     suspend fun getChatsList(invalidateCache: Boolean): List<Chat>
     suspend fun getChatById(chatId: String): Chat?
+    suspend fun getChatMembers(chatId: String): List<User>
     suspend fun getMessages(chatId: String): List<Message>
     suspend fun sendMessage(chatId: String, text: String)
     suspend fun createChat(name: String)

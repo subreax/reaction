@@ -34,7 +34,13 @@ interface BackendService {
     suspend fun getChatDetails(
         @Header("Authorization") token: String,
         @Path("chatId") chatId: String
-    ): ChatDetailsDto
+    ): ChatDto
+
+    @GET("room/members/{chatId}")
+    suspend fun getChatMembers(
+        @Header("Authorization") token: String,
+        @Path("chatId") chatId: String
+    ): List<MemberDto>
 
     @GET("room/roomChat/{chatId}")
     suspend fun getChatMessages(
@@ -92,34 +98,17 @@ data class AuthData(
 
 
 data class ChatDto(
-    @SerializedName("roomId")
+    @SerializedName("roomId", alternate = ["id"])
     val id: String,
 
     @SerializedName("avatarUrl")
     val avatar: String?,
 
-    @SerializedName("name")
+    @SerializedName("name", alternate = ["title"])
     val title: String,
 
     @SerializedName("lastMessage")
     val lastMessage: MessageDto?,
-
-    @SerializedName("isMuted")
-    val isMuted: Boolean,
-
-    @SerializedName("isPinned")
-    val isPinned: Boolean,
-)
-
-data class ChatDetailsDto(
-    @SerializedName("title")
-    val title: String,
-
-    @SerializedName("avatarUrl")
-    val avatar: String?,
-
-    @SerializedName("members")
-    val members: List<MemberDto>,
 
     @SerializedName("membersCount")
     val membersCount: Int,
@@ -128,7 +117,7 @@ data class ChatDetailsDto(
     val isMuted: Boolean,
 
     @SerializedName("isPinned")
-    val isPinned: Boolean
+    val isPinned: Boolean,
 )
 
 data class MemberDto(
@@ -147,7 +136,7 @@ data class MessageDto(
     val chatId: String?,
 
     @SerializedName("text")
-    val content: String,
+    val content: String?,
 
     @SerializedName("date")
     val sentTime: Long
@@ -156,7 +145,7 @@ data class MessageDto(
         return Message(
             chatId = chatId ?: "",
             from = userRepository.getUserById(userId)!!,
-            content = content,
+            content = content ?: "",
             sentTime = sentTime,
             state = MessageState.NoState
         )
