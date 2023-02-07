@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import com.subreax.reaction.StaticLayout_createInstance
 import com.subreax.reaction.ui.theme.ReactionTheme
 import java.text.SimpleDateFormat
+import kotlin.math.max
 import kotlin.math.roundToInt
 
 @Composable
@@ -71,20 +72,17 @@ fun MessageTextAndInfo(
         staticLayout = sl
 
         val textWidth = sl.measureTextWidth(text, textPaint)
-        val lastLineWidth = sl.measureLastLineWidth(text, textPaint)
+        val lastLinePlusInfoWidth = sl.measureLastLineWidth(text, textPaint) + info.width
 
         var width = textWidth
         var height = sl.height
         var infoX = 0
         var infoY = 0
-        if (lastLineWidth + info.width < maxWidth) {
+
+        if (lastLinePlusInfoWidth < maxWidth) {
+            width = max(width, lastLinePlusInfoWidth)
+            infoX = width - info.width
             infoY = height - info.height
-            if (sl.lineCount == 1) {
-                infoX = lastLineWidth
-                width += info.width
-            } else {
-                infoX = width - info.width
-            }
         } else {
             infoX = width - info.width
             infoY = height
