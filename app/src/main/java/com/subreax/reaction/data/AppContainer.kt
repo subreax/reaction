@@ -1,9 +1,11 @@
 package com.subreax.reaction.data
 
+import android.content.Context
 import android.util.Log
 import com.subreax.reaction.api.BackendService
 import com.subreax.reaction.data.auth.AuthRepository
-import com.subreax.reaction.data.auth.AuthRepositoryImpl
+import com.subreax.reaction.data.auth.LocalAuthDataSource
+import com.subreax.reaction.data.auth.impl.AuthRepositoryImpl
 import com.subreax.reaction.data.chat.ChatRepository
 import com.subreax.reaction.data.chat.impl.ChatRepositoryImpl
 import com.subreax.reaction.data.user.UserRepository
@@ -21,7 +23,7 @@ interface AppContainer {
     val socketService: SocketService
 }
 
-class AppContainerImpl : AppContainer {
+class AppContainerImpl(private val appContext: Context) : AppContainer {
     private val _client by lazy {
         OkHttpClient.Builder()
             .addInterceptor(LoggingInterceptor())
@@ -31,17 +33,18 @@ class AppContainerImpl : AppContainer {
     private val _api by lazy {
         val retrofit = Retrofit.Builder()
             .client(_client)
-            .baseUrl("http://37.18.110.82:3000/api/")
+            .baseUrl("$BASE_URL/api/")
             .addConverterFactory(GsonConverterFactory.create())
             .build()
 
         retrofit.create(BackendService::class.java)
     }
 
+    private val authSharedPrefs = appContext.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
+    private val localAuthDataSource = LocalAuthDataSource(authSharedPrefs)
+
     override val authRepository: AuthRepository by lazy {
-        AuthRepositoryImpl(_api, onSignedIn = {
-            socketService.start()
-        })
+        AuthRepositoryImpl(_api, localAuthDataSource)
     }
 
     override val userRepository: UserRepository by lazy {
@@ -53,8 +56,11 @@ class AppContainerImpl : AppContainer {
     }
 
     override val socketService: SocketService by lazy {
-        WebSocketIoService("http://37.18.110.82:3000", authRepository, userRepository)
-        //OkHttpWsService("http://192.168.0.100:3000/socket.io/?EIO=4&transport=websocket", _client, authRepository)
+        WebSocketIoService(BASE_URL, authRepository, userRepository)
+    }
+
+    companion object {
+        private const val BASE_URL = "http://37.18.110.82:3000"
     }
 }
 

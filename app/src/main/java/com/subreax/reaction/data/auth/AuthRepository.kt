@@ -1,14 +1,11 @@
 package com.subreax.reaction.data.auth
 
-import android.content.Context
 import com.subreax.reaction.api.ApiResult
-import com.subreax.reaction.api.AuthData
+import kotlinx.coroutines.flow.Flow
 
 interface AuthRepository {
     data class SignInData(val username: String, val password: String)
     data class SignUpData(val email: String, val username: String, val password: String)
-
-    suspend fun init(ctx: Context) {  }
 
     suspend fun signIn(data: SignInData): ApiResult<Unit>
     suspend fun signUp(data: SignUpData): ApiResult<Unit>
@@ -17,4 +14,6 @@ interface AuthRepository {
     fun getUserId(): String
 
     fun isSignedIn(): Boolean
+
+    val onAuthEvent: Flow<Boolean>
 }

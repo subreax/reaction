@@ -29,7 +29,7 @@ class MainActivity : ComponentActivity() {
             insets
         }*/
 
-        val appContainer = (application as ReactionApplication).appContainer
+        val appContainer = AppContainerHolder.getInstance(applicationContext)
 
         setContent {
             val systemUiController = rememberSystemUiController()
