@@ -16,4 +16,5 @@ interface AuthRepository {
     fun isSignedIn(): Boolean
 
     val onAuthEvent: Flow<Boolean>
+    val onTokenChanged: Flow<String>
 }

@@ -2,6 +2,7 @@ package com.subreax.reaction.data
 
 import android.content.Context
 import android.util.Log
+import androidx.work.WorkManager
 import com.subreax.reaction.api.BackendService
 import com.subreax.reaction.data.auth.AuthRepository
 import com.subreax.reaction.data.auth.LocalAuthDataSource
@@ -43,9 +44,10 @@ class AppContainerImpl(private val appContext: Context) : AppContainer {
     private val authSharedPrefs = appContext.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
     private val localAuthDataSource = LocalAuthDataSource(authSharedPrefs)
 
-    override val authRepository: AuthRepository by lazy {
-        AuthRepositoryImpl(_api, localAuthDataSource)
-    }
+    private val workManager = WorkManager.getInstance(appContext)
+
+    override val authRepository: AuthRepository =
+        AuthRepositoryImpl(_api, localAuthDataSource, workManager)
 
     override val userRepository: UserRepository by lazy {
         UserRepositoryImpl(_api, authRepository)

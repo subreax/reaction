@@ -6,6 +6,7 @@ import com.subreax.reaction.data.chat.MessageState
 import com.subreax.reaction.data.user.UserRepository
 import okhttp3.*
 import retrofit2.http.*
+import java.lang.Long.max
 
 interface BackendService {
     @POST("auth/sign-in")
@@ -92,8 +93,11 @@ data class AuthData(
     @SerializedName("refresh_token_expires")
     val refreshTokenExp: Long
 ) {
+    val remainingLifetime: Long
+        get() = max(accessTokenExp - System.currentTimeMillis(), 0L)
+
     val isTokenAlive: Boolean
-        get() = System.currentTimeMillis() < accessTokenExp
+        get() = remainingLifetime > 0L
 }
 
 
