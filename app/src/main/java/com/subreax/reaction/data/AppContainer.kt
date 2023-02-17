@@ -2,7 +2,6 @@ package com.subreax.reaction.data
 
 import android.content.Context
 import android.util.Log
-import androidx.work.WorkManager
 import com.subreax.reaction.api.BackendService
 import com.subreax.reaction.data.auth.AuthRepository
 import com.subreax.reaction.data.auth.LocalAuthDataSource
@@ -41,13 +40,13 @@ class AppContainerImpl(private val appContext: Context) : AppContainer {
         retrofit.create(BackendService::class.java)
     }
 
-    private val authSharedPrefs = appContext.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
+    private val authSharedPrefs =
+        appContext.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
+
     private val localAuthDataSource = LocalAuthDataSource(authSharedPrefs)
 
-    private val workManager = WorkManager.getInstance(appContext)
-
     override val authRepository: AuthRepository =
-        AuthRepositoryImpl(_api, localAuthDataSource, workManager)
+        AuthRepositoryImpl(_api, localAuthDataSource)
 
     override val userRepository: UserRepository by lazy {
         UserRepositoryImpl(_api, authRepository)

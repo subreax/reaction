@@ -17,4 +17,8 @@ interface AuthRepository {
 
     val onAuthEvent: Flow<Boolean>
     val onTokenChanged: Flow<String>
+
+    companion object {
+        const val EMPTY_TOKEN = ""
+    }
 }

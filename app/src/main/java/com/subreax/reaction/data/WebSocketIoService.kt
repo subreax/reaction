@@ -36,15 +36,18 @@ class WebSocketIoService(
     override val onCreateChat: Flow<String>
         get() = _onCreateChat.asSharedFlow()
 
+    init {
+        listenTokenChanges()
+        start()
+    }
 
     override fun start() {
         if (_socket != null) {
+            Log.w(TAG, "start(): Socket is already opened")
             return
         }
 
         _coroutineScope.launch(Dispatchers.IO) {
-            _headers["Authorization"] = listOf(authRepository.getToken())
-
             val options = IO.Options.builder()
                 .setExtraHeaders(_headers)
                 .build()
@@ -53,9 +56,11 @@ class WebSocketIoService(
                 on("onConnection", this@WebSocketIoService::eventOnConnection)
                 on("onException", this@WebSocketIoService::eventOnException)
                 on("onSendMessage", this@WebSocketIoService::eventOnMessage)
-                on("onCreateRoom", this@WebSocketIoService::eventOnCreateChat)
+                on("onCreateRoom", this@WebSocketIoService::eventOnChatCreated)
                 connect()
             }
+
+            Log.d(TAG, "Socket has opened")
         }
     }
 
@@ -67,6 +72,8 @@ class WebSocketIoService(
         json.put("date", System.currentTimeMillis())
         json.put("type", "text")
         _socket?.emit("newMessage", json)
+
+        Log.d(TAG, "emit newMessage")
     }
 
     override fun createChat(name: String) {
@@ -74,6 +81,8 @@ class WebSocketIoService(
         json.put("userId", authRepository.getUserId())
         json.put("name", name)
         _socket?.emit("createRoom", json)
+
+        Log.d(TAG, "emit createRoom")
     }
 
     override fun joinChat(chatId: String) {
@@ -81,6 +90,8 @@ class WebSocketIoService(
         json.put("userId", authRepository.getUserId())
         json.put("roomId", chatId)
         _socket?.emit("joinToRoom", json)
+
+        Log.d(TAG, "emit joinToRoom")
     }
 
     override fun leaveChat(chatId: String) {
@@ -88,27 +99,39 @@ class WebSocketIoService(
         json.put("userId", authRepository.getUserId())
         json.put("roomId", chatId)
         _socket?.emit("leaveFromRoom", json)
+
+        Log.d(TAG, "emit leaveFromRoom")
     }
 
     override fun stop() {
-        _socket?.disconnect()
-        _socket = null
+        _socket?.let {
+            it.disconnect()
+            Log.d(TAG, "Socket has closed")
+            _socket = null
+        }
+    }
+
+    private fun connectToRooms() {
+        val json = JSONObject()
+        json.put("userId", authRepository.getUserId())
+        _socket?.emit("connectToRooms", json)
+
+        Log.d(TAG, "emit connectToRooms")
     }
 
     private fun eventOnConnection(args: Array<Any>) {
+        Log.d(TAG, "event onConnection")
         if (args.isNotEmpty()) {
             val obj = args[0] as JSONObject
             _connectionId = obj["connectionId"] as String
-            //Log.d(TAG, "onConnection: $_connectionId")
 
-            val req = JSONObject()
-            req.put("userId", authRepository.getUserId())
-            _socket?.emit("connectToRooms", req)
+            connectToRooms()
         }
     }
 
     private fun eventOnMessage(args: Array<Any>) {
         _coroutineScope.launch {
+            Log.d(TAG, "event onMessage")
             if (args.isNotEmpty()) {
                 val obj = args[0] as JSONObject
                 val json = obj.getJSONObject("message").toString()
@@ -119,8 +142,9 @@ class WebSocketIoService(
         }
     }
 
-    private fun eventOnCreateChat(args: Array<Any>) {
+    private fun eventOnChatCreated(args: Array<Any>) {
         _coroutineScope.launch {
+            Log.d(TAG, "event onChatCreated")
             if (args.isNotEmpty()) {
                 val json = args[0] as JSONObject
                 val chatId = json.getString("roomId")
@@ -130,14 +154,32 @@ class WebSocketIoService(
     }
 
     private fun eventOnException(args: Array<Any>) {
-        Log.e(TAG, "onException")
+        Log.e(TAG, "event onException")
         if (args.isNotEmpty()) {
             Log.e(TAG, (args[0] as JSONObject).toString())
         }
     }
 
+    private fun listenTokenChanges() {
+        _coroutineScope.launch {
+            authRepository.onTokenChanged.collect { token ->
+                Log.d(TAG, "onTokenChange")
+                val wasOpened = _socket != null
+                stop()
+
+                if (token != AuthRepository.EMPTY_TOKEN) {
+                    _headers["Authorization"] = listOf(token)
+
+                    if (wasOpened) {
+                        start()
+                    }
+                }
+            }
+        }
+    }
+
 
     companion object {
-        private const val TAG = "WebSocketService"
+        private const val TAG = "WebSocketIoService"
     }
 }
