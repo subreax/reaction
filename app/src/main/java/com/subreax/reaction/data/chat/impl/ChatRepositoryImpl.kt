@@ -119,7 +119,7 @@ class ChatRepositoryImpl(
     override suspend fun joinChat(chatId: String) {
         withContext(Dispatchers.IO) {
             socketService.joinChat(chatId)
-            waitForSocketResponse(socketService.onJoinChat) { true }
+            waitForSocketResponse(socketService.onJoinChat) { it == chatId }
             launch {
                 _requestChats(_chats)
             }
