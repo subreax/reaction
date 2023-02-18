@@ -20,7 +20,8 @@ data class ChatUiState(
     val chatTitle: String,
     val avatar: String?,
     val membersCount: Int,
-    val messages: List<Message>
+    val messages: List<Message>,
+    val navBack: Boolean = false
 )
 
 class ChatViewModel(
@@ -96,12 +97,22 @@ class ChatViewModel(
         navToDetailsScreen()
     }
 
+    fun leaveChat() {
+        viewModelScope.launch {
+            chatRepository.leaveChat(chatId)
+            navBack()
+        }
+    }
+
     private suspend fun getMessages(): List<Message> {
         return withContext(Dispatchers.IO) {
             chatRepository.getMessages(chatId)
         }
     }
 
+    private fun navBack() {
+        _uiState.value = _uiState.value.copy(navBack = true)
+    }
 
     class Factory(
         private val userId: String,

@@ -20,4 +20,5 @@
     <string name="more_actions">Открыть больше действий</string>
     <string name="members">Участники</string>
     <string name="messages_notification_channel_name">Сообщения</string>
+    <string name="leave_chat">Покинуть чат</string>
 </resources>

@@ -8,12 +8,8 @@ import com.subreax.reaction.data.chat.Message
 import com.subreax.reaction.data.user.UserRepository
 import io.socket.client.IO
 import io.socket.client.Socket
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
 import org.json.JSONObject
 
 class WebSocketIoService(
@@ -36,9 +32,16 @@ class WebSocketIoService(
     override val onCreateChat: Flow<String>
         get() = _onCreateChat.asSharedFlow()
 
+    private val _onJoinChat = MutableSharedFlow<String>()
+    override val onJoinChat: Flow<String>
+        get() = _onJoinChat.asSharedFlow()
+
+    private val _onLeaveChat = MutableSharedFlow<String>()
+    override val onLeaveChat: Flow<String>
+        get() = _onLeaveChat.asSharedFlow()
+
     init {
         listenTokenChanges()
-        start()
     }
 
     override fun start() {
@@ -56,7 +59,9 @@ class WebSocketIoService(
                 on("onConnection", this@WebSocketIoService::eventOnConnection)
                 on("onException", this@WebSocketIoService::eventOnException)
                 on("onSendMessage", this@WebSocketIoService::eventOnMessage)
-                on("onCreateRoom", this@WebSocketIoService::eventOnChatCreated)
+                on("onCreateRoom", this@WebSocketIoService::eventOnCreateChat)
+                on("onJoinToRoom", this@WebSocketIoService::eventOnJoinChat)
+                on("onLeaveFromRoom", this@WebSocketIoService::eventOnLeaveChat)
                 connect()
             }
 
@@ -142,13 +147,35 @@ class WebSocketIoService(
         }
     }
 
-    private fun eventOnChatCreated(args: Array<Any>) {
+    private fun eventOnCreateChat(args: Array<Any>) {
         _coroutineScope.launch {
-            Log.d(TAG, "event onChatCreated")
+            Log.d(TAG, "event onCreateChat")
             if (args.isNotEmpty()) {
                 val json = args[0] as JSONObject
                 val chatId = json.getString("roomId")
                 _onCreateChat.emit(chatId)
+            }
+        }
+    }
+
+    private fun eventOnJoinChat(args: Array<Any>) {
+        Log.d(TAG, "event onJoinChat")
+        if (args.isNotEmpty()) {
+            val json = args[0] as JSONObject
+            val chatId = json.getString("roomId")
+            _coroutineScope.launch {
+                _onJoinChat.emit(chatId)
+            }
+        }
+    }
+
+    private fun eventOnLeaveChat(args: Array<Any>) {
+        Log.d(TAG, "event onLeaveChat")
+        if (args.isNotEmpty()) {
+            val json = args[0] as JSONObject
+            val chatId = json.getString("roomId")
+            _coroutineScope.launch {
+                _onLeaveChat.emit(chatId)
             }
         }
     }
@@ -163,16 +190,11 @@ class WebSocketIoService(
     private fun listenTokenChanges() {
         _coroutineScope.launch {
             authRepository.onTokenChanged.collect { token ->
-                Log.d(TAG, "onTokenChange")
-                val wasOpened = _socket != null
                 stop()
 
                 if (token != AuthRepository.EMPTY_TOKEN) {
                     _headers["Authorization"] = listOf(token)
-
-                    if (wasOpened) {
-                        start()
-                    }
+                    start()
                 }
             }
         }

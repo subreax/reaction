@@ -9,20 +9,18 @@ import androidx.compose.foundation.lazy.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Mood
-import androidx.compose.material.icons.filled.Send
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.subreax.reaction.R
 import com.subreax.reaction.api.User
 import com.subreax.reaction.data.chat.Message
 import com.subreax.reaction.ui.components.AutoAvatar
@@ -38,6 +36,12 @@ fun ChatScreen(
     val uiState by viewModel.uiState.collectAsState()
     val messagesListState = rememberLazyListState()
 
+    LaunchedEffect(uiState.navBack) {
+        if (uiState.navBack) {
+            onBackPressed()
+        }
+    }
+
     ChatScreen(
         isLoading = uiState.isLoading,
         currentUserId = viewModel.userId,
@@ -50,7 +54,8 @@ fun ChatScreen(
         onBackPressed = onBackPressed,
         messagesListState = messagesListState,
         onSendPressed = viewModel::sendMessage,
-        onOpenChatDetailsPressed = viewModel::navigateToDetailsScreen
+        onOpenChatDetailsPressed = viewModel::navigateToDetailsScreen,
+        onLeaveChatPressed = viewModel::leaveChat
     )
 }
 
@@ -67,7 +72,8 @@ fun ChatScreen(
     messagesListState: LazyListState,
     onBackPressed: () -> Unit = {},
     onSendPressed: () -> Unit = {},
-    onOpenChatDetailsPressed: () -> Unit = {}
+    onOpenChatDetailsPressed: () -> Unit = {},
+    onLeaveChatPressed: () -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -81,7 +87,8 @@ fun ChatScreen(
                 avatar = avatar,
                 membersCount = membersCount,
                 onBackPressed = onBackPressed,
-                onOpenChatDetailsPressed = onOpenChatDetailsPressed
+                onOpenChatDetailsPressed = onOpenChatDetailsPressed,
+                onLeaveChatPressed = onLeaveChatPressed
             )
             LoadingOverlay(isLoading, modifier = Modifier.weight(1.0f)) {
                 MessagesList(
@@ -105,7 +112,8 @@ fun MyTopAppBar(
     chatTitle: String, avatar: String?,
     membersCount: Int,
     onBackPressed: () -> Unit,
-    onOpenChatDetailsPressed: () -> Unit
+    onOpenChatDetailsPressed: () -> Unit,
+    onLeaveChatPressed: () -> Unit
 ) {
     com.google.accompanist.insets.ui.TopAppBar(
         title = {
@@ -142,8 +150,37 @@ fun MyTopAppBar(
             IconButton(onClick = onBackPressed) {
                 Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Go back")
             }
+        },
+        actions = {
+            ChatOptionsMenuAction(onLeaveChatPressed)
         }
     )
+}
+
+@Composable
+fun ChatOptionsMenuAction(onLeaveChatPressed: () -> Unit) {
+    var dropdownMenuExpanded by remember { mutableStateOf(false) }
+
+    Box {
+        IconButton(onClick = { dropdownMenuExpanded = true }) {
+            Icon(Icons.Filled.MoreVert, stringResource(R.string.more_actions))
+        }
+
+        DropdownMenu(
+            expanded = dropdownMenuExpanded,
+            onDismissRequest = { dropdownMenuExpanded = false },
+            modifier = Modifier.padding(0.dp)
+        ) {
+            DropdownMenuItem(onClick = {
+                dropdownMenuExpanded = false
+                onLeaveChatPressed()
+            }) {
+                Icon(Icons.Filled.Logout, contentDescription = stringResource(R.string.leave_chat))
+                Spacer(Modifier.width(16.dp))
+                Text(stringResource(R.string.leave_chat))
+            }
+        }
+    }
 }
 
 @Composable
@@ -279,7 +316,8 @@ fun ChatScreenPreview() {
             messages = messages,
             enteredMessage = "",
             onEnteredMessageChanged = {},
-            messagesListState = rememberLazyListState()
+            messagesListState = rememberLazyListState(),
+            onLeaveChatPressed = {}
         )
     }
 }

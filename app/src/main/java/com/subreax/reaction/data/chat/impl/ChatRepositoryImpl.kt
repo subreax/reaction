@@ -112,13 +112,14 @@ class ChatRepositoryImpl(
     override suspend fun createChat(name: String) {
         withContext(Dispatchers.IO) {
             socketService.createChat(name)
+            waitForSocketResponse(socketService.onCreateChat) { true }
         }
     }
 
     override suspend fun joinChat(chatId: String) {
         withContext(Dispatchers.IO) {
             socketService.joinChat(chatId)
-            delay(500) // todo
+            waitForSocketResponse(socketService.onJoinChat) { true }
             launch {
                 _requestChats(_chats)
             }
@@ -128,7 +129,28 @@ class ChatRepositoryImpl(
     override suspend fun leaveChat(chatId: String) {
         withContext(Dispatchers.IO) {
             socketService.leaveChat(chatId)
+            waitForSocketResponse(socketService.onLeaveChat) { it == chatId }
+            _deleteChatLocally(chatId)
         }
+    }
+
+    // suspends the coroutine until waitFor flow returns the correct response
+    private suspend fun <T> waitForSocketResponse(
+        waitFor: Flow<T>,
+        returnCondition: (T) -> Boolean
+    ): T {
+        var result: T? = null
+        withContext(Dispatchers.IO) {
+            launch {
+                waitFor.collect {
+                    if (returnCondition(it)) {
+                        result = it
+                        cancel()
+                    }
+                }
+            }
+        }
+        return result!!
     }
 
     override suspend fun isUserAMemberOfTheChat(chatId: String): Boolean {
@@ -148,7 +170,7 @@ class ChatRepositoryImpl(
         _chats[chatId] = _chats[chatId]?.copy(
             isMuted = !enabled
         ) ?: return
-        _onChatsChanged.emit(0)
+        _notifyChatsChanged()
     }
 
     private suspend fun _requestChats(outChats: MutableMap<String, Chat>) {
@@ -172,7 +194,7 @@ class ChatRepositoryImpl(
                 ))
             }
         }
-        _onChatsChanged.emit(0)
+        _notifyChatsChanged()
     }
 
     private suspend fun _requestChat(chatId: String): Chat? {
@@ -214,5 +236,18 @@ class ChatRepositoryImpl(
 
             messagesDto.map { it.toMessage(userRepository) }
         }
+    }
+
+    private fun _notifyChatsChanged() {
+        coroutineScope.launch {
+            _onChatsChanged.emit(0)
+        }
+    }
+
+    private fun _deleteChatLocally(chatId: String) {
+        _chats.remove(chatId)
+        _chatMembers.remove(chatId)
+        _messages.remove(chatId)
+        _notifyChatsChanged()
     }
 }

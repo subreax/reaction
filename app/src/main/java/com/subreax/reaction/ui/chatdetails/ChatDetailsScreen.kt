@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -87,9 +87,6 @@ private fun TopAppBar(onEditClicked: () -> Unit, onBackClicked: () -> Unit) {
         actions = {
             IconButton(onClick = onEditClicked) {
                 Icon(Icons.Filled.Edit, stringResource(R.string.edit_chat_name))
-            }
-            IconButton(onClick = { }) {
-                Icon(Icons.Filled.MoreVert, stringResource(R.string.more_actions))
             }
         },
         title = {},

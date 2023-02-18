@@ -6,6 +6,8 @@ import kotlinx.coroutines.flow.Flow
 interface SocketService {
     val onMessage: Flow<Message>
     val onCreateChat: Flow<String>
+    val onJoinChat: Flow<String>
+    val onLeaveChat: Flow<String>
 
     fun start()
     fun send(chatId: String, msgText: String)
