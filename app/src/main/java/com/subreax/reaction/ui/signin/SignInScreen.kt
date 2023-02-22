@@ -47,7 +47,7 @@ fun SignInScreen(
         onSignInClicked = signInViewModel::signIn,
         onBackPressed = onBackPressed,
         isLoading = uiState.isLoading,
-        errorMsg = uiState.errorMsg.value
+        errorMsg = uiState.errorMsg.asString()
     )
 }
 

@@ -9,7 +9,7 @@ interface SocketService {
     val onJoinChat: Flow<String>
     val onLeaveChat: Flow<String>
 
-    fun start()
+    suspend fun start()
     fun send(chatId: String, msgText: String)
     fun createChat(name: String)
     fun joinChat(chatId: String)

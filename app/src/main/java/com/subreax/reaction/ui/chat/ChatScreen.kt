@@ -22,10 +22,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.subreax.reaction.R
 import com.subreax.reaction.api.User
+import com.subreax.reaction.data.ApplicationState
 import com.subreax.reaction.data.chat.Message
 import com.subreax.reaction.ui.components.AutoAvatar
 import com.subreax.reaction.ui.components.LoadingOverlay
 import com.subreax.reaction.ui.components.Message
+import com.subreax.reaction.utils.pluralResource
 import com.subreax.reaction.ui.theme.ReactionTheme
 
 @Composable
@@ -44,8 +46,9 @@ fun ChatScreen(
 
     ChatScreen(
         isLoading = uiState.isLoading,
+        appState = uiState.appState,
         currentUserId = viewModel.userId,
-        chatTitle = uiState.chatTitle,
+        chatTitle = uiState.title,
         avatar = uiState.avatar,
         membersCount = uiState.membersCount,
         messages = uiState.messages,
@@ -62,6 +65,7 @@ fun ChatScreen(
 @Composable
 fun ChatScreen(
     isLoading: Boolean,
+    appState: ApplicationState,
     currentUserId: String,
     chatTitle: String,
     avatar: String?,
@@ -83,6 +87,7 @@ fun ChatScreen(
     ) {
         Column {
             MyTopAppBar(
+                appState = appState,
                 chatTitle = chatTitle,
                 avatar = avatar,
                 membersCount = membersCount,
@@ -109,6 +114,7 @@ fun ChatScreen(
 
 @Composable
 fun MyTopAppBar(
+    appState: ApplicationState,
     chatTitle: String, avatar: String?,
     membersCount: Int,
     onBackPressed: () -> Unit,
@@ -136,12 +142,7 @@ fun MyTopAppBar(
 
                 Column {
                     Text(chatTitle, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                    Text(
-                        "участников: $membersCount",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Normal,
-                        color = LocalContentColor.current.copy(alpha = ContentAlpha.medium)
-                    )
+                    MembersCounterText(appState, membersCount)
                 }
             }
         },
@@ -154,6 +155,23 @@ fun MyTopAppBar(
         actions = {
             ChatOptionsMenuAction(onLeaveChatPressed)
         }
+    )
+}
+
+@Composable
+fun MembersCounterText(appState: ApplicationState, membersCount: Int) {
+    val text = when (appState) {
+        ApplicationState.WaitingForNetwork -> stringResource(R.string.waiting_for_network)
+        ApplicationState.Connecting -> stringResource(R.string.connecting)
+        ApplicationState.Syncing -> stringResource(R.string.syncing)
+        ApplicationState.Ready -> pluralResource(R.plurals.members_count, membersCount, membersCount)
+    }
+
+    Text(
+        text,
+        fontSize = 14.sp,
+        fontWeight = FontWeight.Normal,
+        color = LocalContentColor.current.copy(alpha = ContentAlpha.medium)
     )
 }
 
@@ -309,6 +327,7 @@ fun ChatScreenPreview() {
     ReactionTheme {
         ChatScreen(
             isLoading = false,
+            appState = ApplicationState.Ready,
             currentUserId = "123",
             chatTitle = "ChatName",
             avatar = null,

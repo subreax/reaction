@@ -23,7 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.subreax.reaction.StaticLayout_createInstance
+import com.subreax.reaction.utils.StaticLayout_createInstance
 import com.subreax.reaction.ui.theme.ReactionTheme
 import java.text.SimpleDateFormat
 import kotlin.math.max

@@ -7,26 +7,22 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.subreax.reaction.R
-import com.subreax.reaction.StringResource
-import com.subreax.reaction.api.ApiResult
-import com.subreax.reaction.toStringResource
 import com.subreax.reaction.data.auth.AuthRepository
+import com.subreax.reaction.utils.Return
+import com.subreax.reaction.utils.ReturnHolder
+import com.subreax.reaction.utils.UiText
 import kotlinx.coroutines.launch
 
 data class SignUpUiState(
     val isLoading: Boolean = false,
     val isSignUpDone: Boolean = false,
-    val errorMsg: StringResource = StringResource()
+    val errorMsg: UiText = UiText.Empty()
 )
 
 
 class SignUpViewModel(
     private val authRepository: AuthRepository
 ) : ViewModel() {
-    private data class StringContainer(var string: String) {
-        fun toStringResource() = string.toStringResource()
-    }
-
     var uiState by mutableStateOf(SignUpUiState())
         private set
 
@@ -56,48 +52,47 @@ class SignUpViewModel(
     fun signUp() {
         viewModelScope.launch {
             if (email.isEmpty()) {
-                uiState = SignUpUiState(errorMsg = R.string.err_enter_email.toStringResource())
+                uiState = SignUpUiState(errorMsg = UiText.Res(R.string.err_enter_email))
             }
             else if (username.isEmpty()) {
-                uiState = SignUpUiState(errorMsg = R.string.err_enter_username.toStringResource())
+                uiState = SignUpUiState(errorMsg = UiText.Res(R.string.err_enter_username))
             }
             else if (password.isEmpty()) {
-                uiState = SignUpUiState(errorMsg = R.string.err_enter_password.toStringResource())
+                uiState = SignUpUiState(errorMsg = UiText.Res(R.string.err_enter_password))
             }
             else {
-                val errorMsg = StringContainer("")
+                
                 uiState = SignUpUiState(isLoading = true)
-                if (signUpUnchecked(errorMsg) && signInUnchecked(errorMsg)) {
+                val retHolder = ReturnHolder(Return.Ok(Unit))
+                
+                if (signUpUnchecked(retHolder) && signInUnchecked(retHolder)) {
                     uiState = SignUpUiState(isSignUpDone = true)
                 }
                 else {
-                    uiState = SignUpUiState(errorMsg = errorMsg.toStringResource())
+                    val msg = (retHolder.ret as Return.Fail).message
+                    uiState = SignUpUiState(errorMsg = msg)
                 }
             }
         }
     }
 
-    private suspend fun signUpUnchecked(outError: StringContainer): Boolean {
-        val result = authRepository.signUp(
-            AuthRepository.SignUpData(email, username, password)
-        )
+    private suspend fun signUpUnchecked(returnHolder: ReturnHolder<Unit>): Boolean {
+        val ret = authRepository.signUp(email, username, password)
 
-        if (result is ApiResult.Success) {
+        if (ret is Return.Ok) {
             return true
         }
-        outError.string = result.errorToString()
+        returnHolder.ret = ret
         return false
     }
 
-    private suspend fun signInUnchecked(outError: StringContainer): Boolean {
-        val result = authRepository.signIn(
-            AuthRepository.SignInData(username, password)
-        )
+    private suspend fun signInUnchecked(returnHolder: ReturnHolder<Unit>): Boolean {
+        val ret = authRepository.signIn(username, password)
 
-        if (result is ApiResult.Success) {
+        if (ret is Return.Ok) {
             return true
         }
-        outError.string = result.errorToString()
+        returnHolder.ret = ret
         return false
     }
 

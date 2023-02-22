@@ -1,11 +1,11 @@
 package com.subreax.reaction.data.user.impl
 
-import com.subreax.reaction.api.ApiResult
 import com.subreax.reaction.api.BackendService
 import com.subreax.reaction.api.User
 import com.subreax.reaction.api.safeApiCall
 import com.subreax.reaction.data.auth.AuthRepository
 import com.subreax.reaction.data.user.UserRepository
+import com.subreax.reaction.utils.Return
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -40,7 +40,7 @@ class UserRepositoryImpl(
             )
         }
 
-        return if (result is ApiResult.Success) {
+        return if (result is Return.Ok) {
             result.value
         } else {
             User(userId, "хто_я#$userId", null, System.currentTimeMillis())

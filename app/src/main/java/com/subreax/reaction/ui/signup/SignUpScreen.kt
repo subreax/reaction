@@ -48,7 +48,7 @@ fun SignUpScreen(
         onSignUpClicked = signUpViewModel::signUp,
         onBackPressed = onBackPressed,
         isLoading = uiState.isLoading,
-        errorMsg = uiState.errorMsg.value
+        errorMsg = uiState.errorMsg.asString()
     )
 }
 

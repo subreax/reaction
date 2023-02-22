@@ -21,4 +21,17 @@
     <string name="members">Участники</string>
     <string name="messages_notification_channel_name">Сообщения</string>
     <string name="leave_chat">Покинуть чат</string>
+    <string name="connection_error">Ошибка соединения с сервером</string>
+    <string name="unknown_error">Неизвестная ошибка</string>
+    <string name="waiting_for_network">Ожидание сети…</string>
+    <string name="connecting">Подключение…</string>
+    <string name="syncing">Синхронизация…</string>
+    <plurals name="members_count">
+        <item quantity="zero">%d участников</item>
+        <item quantity="one">%d участник</item>
+        <item quantity="two">%d участника</item>
+        <item quantity="few">%d участника</item>
+        <item quantity="many">%d участников</item>
+        <item quantity="other">%d участников</item>
+    </plurals>
 </resources>

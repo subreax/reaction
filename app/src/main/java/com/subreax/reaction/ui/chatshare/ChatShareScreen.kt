@@ -30,8 +30,8 @@ import androidx.compose.ui.zIndex
 import androidx.core.graphics.withSave
 import com.google.zxing.common.BitMatrix
 import com.subreax.reaction.R
-import com.subreax.reaction.StaticLayout_createInstance
-import com.subreax.reaction.colorGradientFor
+import com.subreax.reaction.utils.StaticLayout_createInstance
+import com.subreax.reaction.utils.colorGradientFor
 import com.subreax.reaction.ui.components.AutoAvatar
 import java.lang.Float.min
 import kotlin.math.floor

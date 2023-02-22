@@ -6,6 +6,7 @@ import com.subreax.reaction.api.MessageDto
 import com.subreax.reaction.data.auth.AuthRepository
 import com.subreax.reaction.data.chat.Message
 import com.subreax.reaction.data.user.UserRepository
+import com.subreax.reaction.utils.waitFor
 import io.socket.client.IO
 import io.socket.client.Socket
 import kotlinx.coroutines.*
@@ -15,14 +16,15 @@ import org.json.JSONObject
 class WebSocketIoService(
     private val url: String,
     private val authRepository: AuthRepository,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val appStateSource: ApplicationStateSource
 ) : SocketService {
 
     private val _headers = mutableMapOf<String, List<String>>()
     private val _coroutineScope = CoroutineScope(Dispatchers.IO)
     private var _socket: Socket? = null
-    private var _connectionId = ""
 
+    private val _isConnected = MutableStateFlow(false)
 
     private val _onMessage = MutableSharedFlow<Message>()
     override val onMessage: Flow<Message>
@@ -41,23 +43,33 @@ class WebSocketIoService(
         get() = _onLeaveChat.asSharedFlow()
 
     init {
+        appStateSource.addConnectingAction {
+            stop()
+            start()
+            true
+        }
+
         listenTokenChanges()
+        listenForConnectionStatusAndChangeItGlobally()
     }
 
-    override fun start() {
+    override suspend fun start() {
         if (_socket != null) {
             Log.w(TAG, "start(): Socket is already opened")
             return
         }
 
-        _coroutineScope.launch(Dispatchers.IO) {
+        withContext(Dispatchers.IO) {
             val options = IO.Options.builder()
                 .setExtraHeaders(_headers)
                 .build()
 
             _socket = IO.socket(url, options).apply {
-                on("onConnection", this@WebSocketIoService::eventOnConnection)
+                on(Socket.EVENT_CONNECT, this@WebSocketIoService::eventOnConnect)
+                on(Socket.EVENT_CONNECT_ERROR, this@WebSocketIoService::eventOnConnectError)
+                on(Socket.EVENT_DISCONNECT, this@WebSocketIoService::eventOnDisconnect)
                 on("onException", this@WebSocketIoService::eventOnException)
+
                 on("onSendMessage", this@WebSocketIoService::eventOnMessage)
                 on("onCreateRoom", this@WebSocketIoService::eventOnCreateChat)
                 on("onJoinToRoom", this@WebSocketIoService::eventOnJoinChat)
@@ -65,7 +77,7 @@ class WebSocketIoService(
                 connect()
             }
 
-            Log.d(TAG, "Socket has opened")
+            _isConnected.waitFor(true)
         }
     }
 
@@ -122,16 +134,22 @@ class WebSocketIoService(
         _socket?.emit("connectToRooms", json)
 
         Log.d(TAG, "emit connectToRooms")
+        _isConnected.value = true
     }
 
-    private fun eventOnConnection(args: Array<Any>) {
+    private fun eventOnConnect(args: Array<Any>) {
         Log.d(TAG, "event onConnection")
-        if (args.isNotEmpty()) {
-            val obj = args[0] as JSONObject
-            _connectionId = obj["connectionId"] as String
+        connectToRooms()
+    }
 
-            connectToRooms()
-        }
+    private fun eventOnConnectError(args: Array<Any>) {
+        Log.d(TAG, "event onConnectError")
+        _isConnected.value = false
+    }
+
+    private fun eventOnDisconnect(args: Array<Any>) {
+        Log.d(TAG, "event onDisconnect")
+        _isConnected.value = false
     }
 
     private fun eventOnMessage(args: Array<Any>) {
@@ -195,6 +213,16 @@ class WebSocketIoService(
                 if (token != AuthRepository.EMPTY_TOKEN) {
                     _headers["Authorization"] = listOf(token)
                     start()
+                }
+            }
+        }
+    }
+
+    private fun listenForConnectionStatusAndChangeItGlobally() {
+        _coroutineScope.launch {
+            _isConnected.collect {
+                if (!it) {
+                    appStateSource.restart()
                 }
             }
         }

@@ -7,16 +7,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.subreax.reaction.R
-import com.subreax.reaction.StringResource
-import com.subreax.reaction.api.ApiResult
-import com.subreax.reaction.toStringResource
 import com.subreax.reaction.data.auth.AuthRepository
+import com.subreax.reaction.utils.Return
+import com.subreax.reaction.utils.UiText
 import kotlinx.coroutines.launch
 
 data class SignInUiState(
     val isSignInDone: Boolean = false,
     val isLoading: Boolean = false,
-    val errorMsg: StringResource = StringResource()
+    val errorMsg: UiText = UiText.Empty()
 )
 
 class SignInViewModel(
@@ -42,19 +41,17 @@ class SignInViewModel(
     fun signIn() {
         viewModelScope.launch {
             if (username.isEmpty()) {
-                uiState = SignInUiState(errorMsg = R.string.err_enter_username.toStringResource())
+                uiState = SignInUiState(errorMsg = UiText.Res(R.string.err_enter_username))
             }
             else if (password.isEmpty()) {
-                uiState = SignInUiState(errorMsg = R.string.err_enter_password.toStringResource())
+                uiState = SignInUiState(errorMsg = UiText.Res(R.string.err_enter_password))
             }
             else {
                 uiState = SignInUiState(isLoading = true)
-                val result = authRepository.signIn(AuthRepository.SignInData(username, password))
-                if (result is ApiResult.Success) {
-                    uiState = SignInUiState(isSignInDone = true)
-                }
-                else {
-                    uiState = SignInUiState(errorMsg = result.errorToString().toStringResource())
+                val ret = authRepository.signIn(username, password)
+                uiState = when (ret) {
+                    is Return.Ok -> SignInUiState(isSignInDone = true)
+                    is Return.Fail -> SignInUiState(errorMsg = ret.message)
                 }
             }
         }

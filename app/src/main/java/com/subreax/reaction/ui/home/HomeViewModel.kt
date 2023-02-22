@@ -6,35 +6,46 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.subreax.reaction.data.ApplicationState
+import com.subreax.reaction.data.ApplicationStateSource
 import com.subreax.reaction.data.chat.Chat
 import com.subreax.reaction.data.chat.ChatRepository
 import kotlinx.coroutines.launch
 
 data class HomeUiState(
-    val isLoading: Boolean,
+    val state: ApplicationState,
     val chats: List<Chat>
 )
 
 class HomeViewModel(
     private val chatRepository: ChatRepository,
+    private val appStateSrc: ApplicationStateSource
 ) : ViewModel() {
-    var uiState by mutableStateOf(HomeUiState(true, emptyList()))
+    var uiState by mutableStateOf(HomeUiState(ApplicationState.WaitingForNetwork, emptyList()))
         private set
 
     init {
         viewModelScope.launch {
-            updateChatList()
-        }
-
-        viewModelScope.launch {
             chatRepository.onMessagesChanged.collect {
-                updateChatList()
+                getChatList()
             }
         }
 
         viewModelScope.launch {
             chatRepository.onChatsChanged.collect {
-                updateChatList()
+                getChatList()
+            }
+        }
+
+        viewModelScope.launch {
+            appStateSrc.state.collect { state ->
+                var chatList = uiState.chats
+
+                if (state == ApplicationState.Ready) {
+                    chatList = getChatList()
+                }
+
+                uiState = HomeUiState(state, chatList)
             }
         }
     }
@@ -45,17 +56,17 @@ class HomeViewModel(
         }
     }
 
-    private suspend fun updateChatList() {
-        val chats = chatRepository.getChatsList(false)
-        uiState = uiState.copy(isLoading = false, chats = chats)
+    private suspend fun getChatList(): List<Chat> {
+        return chatRepository.getChatsList(false)
     }
 
 
     class Factory(
-        private val chatRepository: ChatRepository
+        private val chatRepository: ChatRepository,
+        private val appStateSource: ApplicationStateSource
     ) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return HomeViewModel(chatRepository) as T
+            return HomeViewModel(chatRepository, appStateSource) as T
         }
     }
 }

@@ -16,7 +16,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.subreax.reaction.colorGradientFor
+import com.subreax.reaction.utils.colorGradientFor
 import com.subreax.reaction.ui.theme.ReactionTheme
 
 @Composable

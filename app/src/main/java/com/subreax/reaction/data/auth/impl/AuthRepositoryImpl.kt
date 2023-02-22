@@ -5,6 +5,8 @@ import com.subreax.reaction.api.*
 import com.subreax.reaction.data.auth.AuthRepository
 import com.subreax.reaction.data.auth.AuthRepository.Companion.EMPTY_TOKEN
 import com.subreax.reaction.data.auth.LocalAuthDataSource
+import com.subreax.reaction.data.auth.RemoteAuthDataSource
+import com.subreax.reaction.utils.Return
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -13,9 +15,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 
 class AuthRepositoryImpl(
-    private val api: BackendService,
+    private val remoteAuthDataSource: RemoteAuthDataSource,
     private val localAuthDataSource: LocalAuthDataSource
 ) : AuthRepository {
     private var authData: AuthData? = null
@@ -42,38 +45,41 @@ class AuthRepositoryImpl(
         }
     }
 
-    override suspend fun signIn(data: AuthRepository.SignInData): ApiResult<Unit> {
-        val result = safeApiCall(Dispatchers.IO) {
-            api.signIn(SignInDto(data.username, data.password))
-        }
+    override suspend fun signIn(username: String, password: String): Return<Unit> {
+        val ret = remoteAuthDataSource.signIn(username, password)
 
-        if (result is ApiResult.Success) {
-            setNewAuthData(result.value)
-            onAuth()
+        return when (ret) {
+            is Return.Ok -> {
+                setNewAuthData(ret.value)
+                onAuth()
+                Return.Ok(Unit)
+            }
+            is Return.Fail -> {
+                ret
+            }
         }
-
-        return result.convert<Unit> { }
     }
 
-    override suspend fun signUp(data: AuthRepository.SignUpData): ApiResult<Unit> {
-        return safeApiCall(Dispatchers.IO) {
-            api.signUp(SignUpDto(data.email, data.username, data.password))
-        }.convert<Unit> { }
+    override suspend fun signUp(email: String, username: String, password: String): Return<Unit> {
+        return remoteAuthDataSource.signUp(email, username, password)
     }
 
     override suspend fun getToken(): String {
-        tokenMutex.withLock {
-            if (authData == null) {
-                Log.e(TAG, "User is not signed in")
-                return EMPTY_TOKEN
-            }
-
-            if (!authData!!.isTokenAlive) {
-                refreshToken()
+        var token = EMPTY_TOKEN
+        withContext(Dispatchers.IO) {
+            tokenMutex.withLock {
+                if (authData == null) {
+                    Log.e(TAG, "User is not signed in")
+                    return@withContext
+                }
+                
+                if (!authData!!.isTokenAlive) {
+                    refreshToken()
+                }
+                token = authData!!.accessToken
             }
         }
-
-        return authData!!.accessToken
+        return token
     }
 
     override fun getUserId(): String {
@@ -86,14 +92,18 @@ class AuthRepositoryImpl(
 
     private suspend fun refreshToken(): Boolean {
         return authData?.let { data ->
-            val apiResult = safeApiCall { api.refreshToken(data.refreshToken) }
-            if (apiResult is ApiResult.Success) {
-                setNewAuthData(apiResult.value)
-                Log.d(TAG, "Token has refreshed")
-                true
-            } else {
-                Log.e(TAG, "Failed to refresh token: ${apiResult.errorToString()}")
-                false
+            val ret = remoteAuthDataSource.refreshToken(data)
+
+            when (ret) {
+                is Return.Ok -> {
+                    setNewAuthData(ret.value)
+                    Log.d(TAG, "Token has refreshed")
+                    true
+                }
+                is Return.Fail -> {
+                    Log.e(TAG, "Failed to refresh token: ${ret.message}")
+                    false
+                }
             }
         } ?: false
     }

@@ -15,6 +15,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.subreax.reaction.R
 import com.subreax.reaction.api.User
+import com.subreax.reaction.data.ApplicationState
 import com.subreax.reaction.data.chat.Chat
 import com.subreax.reaction.data.chat.Message
 import com.subreax.reaction.ui.components.ChatListItem
@@ -31,9 +32,7 @@ fun HomeScreen(
     Scaffold(
         topBar = {
             com.google.accompanist.insets.ui.TopAppBar(
-                title = {
-                    Text(text = stringResource(R.string.app_name))
-                },
+                title = { AppBarTitle(state = uiState.state) },
                 contentPadding = WindowInsets.statusBars.asPaddingValues()
             )
         },
@@ -43,7 +42,7 @@ fun HomeScreen(
             }
         }
     ) { innerPadding ->
-        LoadingOverlay(isLoading = uiState.isLoading) {
+        LoadingOverlay(isLoading = uiState.state != ApplicationState.Ready && uiState.chats.isEmpty()) {
             if (uiState.chats.isEmpty()) {
                 NoChatsLabel()
             }
@@ -56,6 +55,18 @@ fun HomeScreen(
             }
         }
     }
+}
+
+@Composable
+fun AppBarTitle(state: ApplicationState) {
+    val text = when (state) {
+        ApplicationState.WaitingForNetwork -> stringResource(R.string.waiting_for_network)
+        ApplicationState.Connecting -> stringResource(R.string.connecting)
+        ApplicationState.Syncing -> stringResource(R.string.syncing)
+        ApplicationState.Ready -> stringResource(R.string.app_name)
+    }
+
+    Text(text)
 }
 
 @Composable

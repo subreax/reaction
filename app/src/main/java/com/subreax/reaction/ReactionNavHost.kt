@@ -77,7 +77,7 @@ fun ReactionNavHost(
             HomeScreen(
                 //statusBarHeight = statusBarHeight,
                 viewModel = viewModel(
-                    factory = HomeViewModel.Factory(appContainer.chatRepository)
+                    factory = HomeViewModel.Factory(appContainer.chatRepository, appContainer.appStateSource)
                 ),
                 onChatClicked = { chat ->
                     navController.navigate(
@@ -105,7 +105,8 @@ fun ReactionNavHost(
                                 "${Screen.ChatDetails.route}/${chatId}"
                             )
                         },
-                        appContainer.chatRepository
+                        appContainer.chatRepository,
+                        appContainer.appStateSource
                     )
                 ),
                 // todo: fix back nav button behaviour to this
