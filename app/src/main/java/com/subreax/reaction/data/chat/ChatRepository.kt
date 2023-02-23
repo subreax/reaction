@@ -24,7 +24,7 @@ data class Chat(
 
 
 interface ChatRepository {
-    suspend fun getChatsList(invalidateCache: Boolean): List<Chat>
+    suspend fun getChatsList(): List<Chat>
     suspend fun getChatById(chatId: String): Chat?
     suspend fun getChatMembers(chatId: String): List<User>
     suspend fun getMessages(chatId: String): List<Message>

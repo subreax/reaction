@@ -27,13 +27,13 @@ class HomeViewModel(
     init {
         viewModelScope.launch {
             chatRepository.onMessagesChanged.collect {
-                getChatList()
+                updateChatList()
             }
         }
 
         viewModelScope.launch {
             chatRepository.onChatsChanged.collect {
-                getChatList()
+                updateChatList()
             }
         }
 
@@ -42,7 +42,7 @@ class HomeViewModel(
                 var chatList = uiState.chats
 
                 if (state == ApplicationState.Ready) {
-                    chatList = getChatList()
+                    chatList = chatRepository.getChatsList()
                 }
 
                 uiState = HomeUiState(state, chatList)
@@ -56,8 +56,9 @@ class HomeViewModel(
         }
     }
 
-    private suspend fun getChatList(): List<Chat> {
-        return chatRepository.getChatsList(false)
+    private suspend fun updateChatList() {
+        val chats = chatRepository.getChatsList()
+        uiState = uiState.copy(chats = chats)
     }
 
 

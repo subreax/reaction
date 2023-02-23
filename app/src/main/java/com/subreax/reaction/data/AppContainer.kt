@@ -9,6 +9,8 @@ import com.subreax.reaction.data.auth.RemoteAuthDataSource
 import com.subreax.reaction.data.auth.impl.AuthRepositoryImpl
 import com.subreax.reaction.data.chat.ChatRepository
 import com.subreax.reaction.data.chat.impl.ChatRepositoryImpl
+import com.subreax.reaction.data.chat.impl.InMemoryChatDataSource
+import com.subreax.reaction.data.chat.impl.RemoteChatDSImpl
 import com.subreax.reaction.data.user.UserRepository
 import com.subreax.reaction.data.user.impl.UserRepositoryImpl
 import kotlinx.coroutines.CoroutineScope
@@ -55,6 +57,9 @@ class AppContainerImpl(private val appContext: Context) : AppContainer {
     private val localAuthDataSource = LocalAuthDataSource(authSharedPrefs)
     private val remoteAuthDataSource = RemoteAuthDataSource(_api)
 
+    private val localChatDS by lazy { InMemoryChatDataSource() }
+    private val remoteChatDS by lazy { RemoteChatDSImpl(_api, authRepository, userRepository) }
+
     override val authRepository: AuthRepository =
         AuthRepositoryImpl(remoteAuthDataSource, localAuthDataSource)
 
@@ -63,7 +68,11 @@ class AppContainerImpl(private val appContext: Context) : AppContainer {
     }
 
     override val chatRepository: ChatRepository by lazy {
-        ChatRepositoryImpl(_api, authRepository, userRepository, socketService,
+        ChatRepositoryImpl(
+            _api,
+            localChatDS, remoteChatDS,
+            authRepository, userRepository,
+            socketService,
             appStateSource
         )
     }

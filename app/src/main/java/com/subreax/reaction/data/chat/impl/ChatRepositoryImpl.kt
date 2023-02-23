@@ -5,12 +5,9 @@ import com.subreax.reaction.api.*
 import com.subreax.reaction.data.ApplicationStateSource
 import com.subreax.reaction.data.SocketService
 import com.subreax.reaction.data.auth.AuthRepository
-import com.subreax.reaction.data.chat.Chat
-import com.subreax.reaction.data.chat.ChatRepository
-import com.subreax.reaction.data.chat.Message
+import com.subreax.reaction.data.chat.*
 import com.subreax.reaction.data.user.UserRepository
 import com.subreax.reaction.utils.Return
-import com.subreax.reaction.utils.putSynchronously
 import com.subreax.reaction.utils.waitFor
 import com.subreax.reaction.utils.waitForAny
 import kotlinx.coroutines.CoroutineScope
@@ -22,6 +19,8 @@ import kotlinx.coroutines.withContext
 
 class ChatRepositoryImpl(
     private val api: BackendService,
+    private val localChatDS: LocalChatDataSource,
+    private val remoteChatDS: RemoteChatDataSource,
     private val authRepository: AuthRepository,
     private val userRepository: UserRepository,
     private val socketService: SocketService,
@@ -29,13 +28,8 @@ class ChatRepositoryImpl(
 ) : ChatRepository {
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
 
-    // chatId - chat
-    private val chatCache = mutableMapOf<String, Chat>()
-
     // chatId - list of members
     private val _chatMembers = mutableMapOf<String, List<User>>()
-
-    private var _isChatsCached = false
 
     // chatId - message
     private val _messages = mutableMapOf<String, MutableList<Message>>()
@@ -44,69 +38,69 @@ class ChatRepositoryImpl(
     override val onMessagesChanged: Flow<Chat>
         get() = _onMessagesChanged
 
-    private val _onChatsChanged = MutableSharedFlow<Int>()
     override val onChatsChanged: Flow<Int>
-        get() = _onChatsChanged
+        get() = localChatDS.onChatsChanged
 
 
     init {
         appStateSrc.addSyncingAction {
-            _getChatMap(invalidateCache = true)
+            syncChats()
             _messages.clear()
             true
         }
 
         observeOnMessage()
-        observeOnCreateChat()
+    }
+
+    private suspend fun syncChats() {
+        val chatsRet = remoteChatDS.getChatsList()
+        if (chatsRet is Return.Ok) {
+            localChatDS.setList(chatsRet.value)
+        }
+        else {
+            val fail = chatsRet as Return.Fail
+            Log.e(TAG, "Failed to sync chats: ${fail.code}  ${fail.message}")
+        }
     }
 
     private fun observeOnMessage() {
         coroutineScope.launch {
             socketService.onMessage.collect { msg ->
-                val chat = _getChatMap()[msg.chatId]
-                if (chat != null) {
-                    _messages[msg.chatId]?.add(msg)
-                    _getChatMap()[msg.chatId] = _getChatMap()[msg.chatId]!!.copy( // todo: !!
-                        lastMessage = msg
-                    )
-                    _onMessagesChanged.emit(chat)
-                } else {
-                    Log.w("ChatRepositoryImpl", "Message from unknown chat: ${msg.chatId}")
+                val chat = localChatDS.findById(msg.chatId)
+                if (chat == null) {
+                    Log.e(TAG, "Message from unknown chat: ${msg.chatId}")
+                }
+                else {
+                    localChatDS.updateOne(chat.copy(lastMessage = msg))
+                    _messages[chat.id]?.add(msg)
+                    notifyMessagesChanged(chat)
                 }
             }
         }
     }
 
-    private fun observeOnCreateChat() {
-        coroutineScope.launch {
-            socketService.onCreateChat.collect { chatId ->
-                _getChatMap(true)
-            }
-        }
-    }
-
-    override suspend fun getChatsList(invalidateCache: Boolean): List<Chat> {
-        return withContext(Dispatchers.IO) {
-            _getChatMap()
-                .map { it.value }
-                .sortedByDescending { it.lastMessage?.sentTime ?: System.currentTimeMillis() }
-        }
+    override suspend fun getChatsList(): List<Chat> {
+        return localChatDS.getList()
+            .sortedByDescending { it.lastMessage?.sentTime ?: System.currentTimeMillis() }
     }
 
     override suspend fun getChatById(chatId: String): Chat? {
-        return _getChatMap()[chatId] ?: _requestChat(chatId)
+        return localChatDS.findById(chatId)
     }
 
     override suspend fun getChatMembers(chatId: String): List<User> {
         if (!_chatMembers.containsKey(chatId)) {
-            val members = unsafeApiCall { api.getChatMembers(authRepository.getToken(), chatId) }
-            val userList = members.map {
-                userRepository.getUserById(it.userId)!!
+            val membersRet = remoteChatDS.getChatMembers(chatId)
+            if (membersRet is Return.Ok) {
+                _chatMembers[chatId] = membersRet.value
+                return membersRet.value
             }
-            _chatMembers[chatId] = userList
+            else {
+                val fail = membersRet as Return.Fail
+                Log.e(TAG, "Failed to get members for the chat: ${fail.code}  ${fail.message}")
+            }
         }
-
-        return _chatMembers[chatId]!!
+        return emptyList()
     }
 
     override suspend fun getMessages(chatId: String): List<Message> {
@@ -123,7 +117,14 @@ class ChatRepositoryImpl(
     override suspend fun createChat(name: String) {
         withContext(Dispatchers.IO) {
             socketService.createChat(name)
-            socketService.onCreateChat.waitForAny()
+            val chatId = socketService.onCreateChat.waitForAny()
+            val chatRet = remoteChatDS.getById(chatId)
+            if (chatRet is Return.Ok) {
+                localChatDS.updateOne(chatRet.value!!)
+            }
+            else {
+                Log.d(TAG, "Failed to get details of the chat: $chatId")
+            }
         }
     }
 
@@ -131,9 +132,6 @@ class ChatRepositoryImpl(
         withContext(Dispatchers.IO) {
             socketService.joinChat(chatId)
             socketService.onJoinChat.waitFor(chatId)
-            launch {
-                fetchChats(chatCache)
-            }
         }
     }
 
@@ -141,12 +139,12 @@ class ChatRepositoryImpl(
         withContext(Dispatchers.IO) {
             socketService.leaveChat(chatId)
             socketService.onLeaveChat.waitFor(chatId)
-            _deleteChatLocally(chatId)
+            removeChat(chatId)
         }
     }
 
     override suspend fun isUserAMemberOfTheChat(chatId: String): Boolean {
-        return _getChatMap()[chatId] != null
+        return localChatDS.findById(chatId) != null
     }
 
     override suspend fun toggleNotifications(chatId: String, enabled: Boolean) {
@@ -159,71 +157,8 @@ class ChatRepositoryImpl(
             unsafeApiCall { api.muteChat(token, chatPtr) }
         }
 
-        chatCache[chatId] = chatCache[chatId]?.copy(
-            isMuted = !enabled
-        ) ?: return
-        _notifyChatsChanged()
-    }
-
-    private suspend fun fetchChats(outChats: MutableMap<String, Chat>) {
-        withContext(Dispatchers.IO) {
-            outChats.clear()
-            val ret = safeApiCall {
-                api.getChatList(authRepository.getToken())
-            }
-
-            if (ret is Return.Ok) {
-                for (chatDto in ret.value) {
-                    val lastMessage = chatDto.lastMessage?.toMessage(userRepository)
-
-                    chatCache.putSynchronously(chatDto.id, Chat(
-                        chatDto.id,
-                        chatDto.avatar,
-                        chatDto.title,
-                        chatDto.membersCount,
-                        lastMessage,
-                        chatDto.isMuted,
-                        chatDto.isPinned,
-                    ))
-                }
-                _notifyChatsChanged()
-            }
-        }
-    }
-
-    private suspend fun _requestChat(chatId: String): Chat? {
-        return withContext(Dispatchers.IO) {
-            val ret = safeApiCall { api.getChatDetails(authRepository.getToken(), chatId) }
-            return@withContext when (ret) {
-                is Return.Ok -> {
-                    Log.d("ChatRepositoryImpl", "Invite to: $ret")
-                    Chat(
-                        chatId,
-                        ret.value.avatar,
-                        ret.value.title,
-                        ret.value.membersCount,
-                        null,
-                        ret.value.isMuted,
-                        ret.value.isPinned,
-                    )
-                }
-                else -> {
-                    null
-                }
-            }
-        }
-    }
-
-    private suspend fun _getChatMap(invalidateCache: Boolean = false): MutableMap<String, Chat> {
-        if (invalidateCache) {
-            _isChatsCached = false
-        }
-
-        if (!_isChatsCached) {
-            fetchChats(chatCache)
-            _isChatsCached = true
-        }
-        return chatCache
+        val chat = localChatDS.findById(chatId)?.copy(isMuted = !enabled) ?: return
+        localChatDS.updateOne(chat)
     }
 
     private suspend fun fetchMessages(chatId: String): List<Message> {
@@ -241,16 +176,19 @@ class ChatRepositoryImpl(
         }
     }
 
-    private fun _notifyChatsChanged() {
+    private fun notifyMessagesChanged(chat: Chat) {
         coroutineScope.launch {
-            _onChatsChanged.emit(0)
+            _onMessagesChanged.emit(chat)
         }
     }
 
-    private fun _deleteChatLocally(chatId: String) {
-        chatCache.remove(chatId)
+    private suspend fun removeChat(chatId: String) {
         _chatMembers.remove(chatId)
         _messages.remove(chatId)
-        _notifyChatsChanged()
+        localChatDS.remove(chatId)
+    }
+
+    companion object {
+        private const val TAG = "ChatRepositoryImpl"
     }
 }

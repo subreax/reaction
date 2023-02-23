@@ -1,6 +1,7 @@
 package com.subreax.reaction.api
 
 import com.google.gson.annotations.SerializedName
+import com.subreax.reaction.data.chat.Chat
 import com.subreax.reaction.data.chat.Message
 import com.subreax.reaction.data.chat.MessageState
 import com.subreax.reaction.data.user.UserRepository
@@ -112,7 +113,7 @@ data class ChatDto(
     val title: String,
 
     @SerializedName("lastMessage")
-    val lastMessage: MessageDto?,
+    val lastMessageDto: MessageDto?,
 
     @SerializedName("membersCount")
     val membersCount: Int,
@@ -122,7 +123,19 @@ data class ChatDto(
 
     @SerializedName("isPinned")
     val isPinned: Boolean,
-)
+) {
+    suspend fun toChat(userRepository: UserRepository): Chat {
+        return Chat(
+            id,
+            avatar,
+            title,
+            membersCount,
+            lastMessageDto?.toMessage(userRepository),
+            isMuted,
+            isPinned,
+        )
+    }
+}
 
 data class MemberDto(
     @SerializedName("userId")
