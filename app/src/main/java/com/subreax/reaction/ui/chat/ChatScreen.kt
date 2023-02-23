@@ -1,13 +1,16 @@
 package com.subreax.reaction.ui.chat
 
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -15,8 +18,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -28,8 +32,8 @@ import com.subreax.reaction.data.chat.Message
 import com.subreax.reaction.ui.components.AutoAvatar
 import com.subreax.reaction.ui.components.LoadingOverlay
 import com.subreax.reaction.ui.components.Message
-import com.subreax.reaction.utils.pluralResource
 import com.subreax.reaction.ui.theme.ReactionTheme
+import com.subreax.reaction.utils.pluralResource
 
 @Composable
 fun ChatScreen(
@@ -49,7 +53,8 @@ fun ChatScreen(
         // scroll only if the user at the bottom of the list
         // or the user sent a message
         if (messagesListState.firstVisibleItemIndex < 2
-            || uiState.messages.firstOrNull()?.from?.id == viewModel.userId) {
+            || uiState.messages.firstOrNull()?.from?.id == viewModel.userId
+        ) {
             messagesListState.animateScrollToItem(0)
         }
     }
@@ -236,7 +241,6 @@ fun MessagesList(
     LazyColumn(
         modifier = modifier,
         contentPadding = PaddingValues(8.dp),
-        //verticalArrangement = Arrangement.Bottom,
         reverseLayout = true,
         state = state
     ) {
@@ -284,42 +288,54 @@ fun MessageInputPanel(
         Row(
             modifier = Modifier
                 .heightIn(32.dp)
-                .padding(horizontal = 8.dp)
                 .fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = { /*TODO*/ }) {
                 Icon(imageVector = Icons.Filled.Mood, contentDescription = "Emoji icon")
             }
-            TextField(
+            MessageInputTextField(
                 value = message,
                 onValueChange = onMessageChanged,
-                modifier = Modifier
-                    .weight(1.0f)
-                    .defaultMinSize(
-                        minWidth = TextFieldDefaults.MinWidth,
-                        minHeight = 32.dp
-                    ),
-                placeholder = {
-                    Text("Message")
-                },
-                colors = TextFieldDefaults.textFieldColors(
-                    backgroundColor = Color.Transparent,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent
-                ),
-                shape = MaterialTheme.shapes.small
+                hint = stringResource(R.string.message),
+                modifier = Modifier.weight(1.0f).padding(vertical = 8.dp),
+                maxLines = 6
             )
-            /*BasicTextField(
-                value = message,
-                onValueChange = onMessageChanged,
-                modifier = Modifier.weight(1.0f)
-            )*/
             IconButton(onClick = onSendPressed) {
                 Icon(imageVector = Icons.Filled.Send, contentDescription = "Send")
             }
         }
+    }
+}
+
+@Composable
+fun MessageInputTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    hint: String,
+    modifier: Modifier = Modifier,
+    textStyle: TextStyle = MaterialTheme.typography.body1,
+    maxLines: Int = Int.MAX_VALUE
+) {
+    val color = LocalContentColor.current
+
+    Box(modifier = modifier) {
+        if (value.isEmpty()) {
+            Text(
+                text = hint,
+                color = color.copy(alpha = ContentAlpha.medium),
+                style = textStyle
+            )
+        }
+
+        BasicTextField(
+            value = value,
+            onValueChange = onValueChange,
+            textStyle = textStyle.copy(color = color),
+            cursorBrush = SolidColor(MaterialTheme.colors.primary),
+            modifier = Modifier.fillMaxWidth(),
+            maxLines = maxLines
+        )
     }
 }
 
@@ -329,9 +345,9 @@ fun ChatScreenPreview() {
     val user = User("123", "refrigerator2k", null, System.currentTimeMillis())
     val other = User("567", "-Mipe-", null, System.currentTimeMillis())
     val messages = listOf(
-        Message("", other, "нармальна", System.currentTimeMillis()),
-        Message("", user, "как дела", System.currentTimeMillis()),
-        Message("", user, "привет", System.currentTimeMillis())
+        Message("", other, "нормальна", 0),
+        Message("", user, "как дела", 1),
+        Message("", user, "привет", 2)
     )
 
     ReactionTheme {
