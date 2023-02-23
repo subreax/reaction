@@ -1,6 +1,7 @@
 package com.subreax.reaction.ui.chat
 
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -41,6 +42,15 @@ fun ChatScreen(
     LaunchedEffect(uiState.navBack) {
         if (uiState.navBack) {
             onBackPressed()
+        }
+    }
+
+    LaunchedEffect(uiState.messages) {
+        // scroll only if the user at the bottom of the list
+        // or the user sent a message
+        if (messagesListState.firstVisibleItemIndex < 2
+            || uiState.messages.firstOrNull()?.from?.id == viewModel.userId) {
+            messagesListState.animateScrollToItem(0)
         }
     }
 
@@ -230,7 +240,7 @@ fun MessagesList(
         reverseLayout = true,
         state = state
     ) {
-        items(messages) { message ->
+        items(messages, key = { it.sentTime }) { message ->
             val isMyMsg = currentUserId == message.from.id
             val author = if (isMyMsg) null else message.from.name
 
