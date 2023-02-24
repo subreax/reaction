@@ -25,7 +25,6 @@ import com.subreax.reaction.ui.signup.SignUpViewModel
 
 @Composable
 fun ReactionNavHost(
-    //statusBarHeight: Dp,
     navController: NavHostController,
     appContainer: AppContainer,
     startDestination: Screen
@@ -75,7 +74,6 @@ fun ReactionNavHost(
 
         composable(Screen.Home.route) {
             HomeScreen(
-                //statusBarHeight = statusBarHeight,
                 viewModel = viewModel(
                     factory = HomeViewModel.Factory(appContainer.chatRepository, appContainer.appStateSource)
                 ),

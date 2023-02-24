@@ -19,12 +19,12 @@ import com.subreax.reaction.api.User
 import com.subreax.reaction.data.ApplicationState
 import com.subreax.reaction.data.chat.Chat
 import com.subreax.reaction.data.chat.Message
+import com.subreax.reaction.ui.LocalStatusBarPadding
 import com.subreax.reaction.ui.components.ChatListItem
 import com.subreax.reaction.ui.components.LoadingOverlay
 
 @Composable
 fun HomeScreen(
-    //statusBarHeight: Dp,
     viewModel: HomeViewModel,
     onChatClicked: (Chat) -> Unit = {}
 ) {
@@ -34,7 +34,7 @@ fun HomeScreen(
         topBar = {
             com.google.accompanist.insets.ui.TopAppBar(
                 title = { AppBarTitle(state = uiState.state) },
-                contentPadding = WindowInsets.statusBars.asPaddingValues(),
+                contentPadding = LocalStatusBarPadding.current,
                 navigationIcon = {
                     IconButton(onClick = { /*TODO*/ }) {
                         Icon(Icons.Filled.Menu, contentDescription = "Menu")

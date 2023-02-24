@@ -29,6 +29,7 @@ import com.subreax.reaction.R
 import com.subreax.reaction.api.User
 import com.subreax.reaction.data.ApplicationState
 import com.subreax.reaction.data.chat.Message
+import com.subreax.reaction.ui.LocalStatusBarPadding
 import com.subreax.reaction.ui.components.AutoAvatar
 import com.subreax.reaction.ui.components.LoadingOverlay
 import com.subreax.reaction.ui.components.Message
@@ -167,7 +168,7 @@ fun MyTopAppBar(
                 }
             }
         },
-        contentPadding = WindowInsets.statusBars.asPaddingValues(),
+        contentPadding = LocalStatusBarPadding.current,
         navigationIcon = {
             IconButton(onClick = onBackPressed) {
                 Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Go back")

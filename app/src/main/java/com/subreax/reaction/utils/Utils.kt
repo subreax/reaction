@@ -1,10 +1,14 @@
 package com.subreax.reaction.utils
 
+import android.content.res.Resources
 import android.os.Build
 import android.text.Layout
 import android.text.StaticLayout
 import android.text.TextPaint
 import android.text.TextUtils
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import kotlin.math.roundToInt
 
 fun <K, V> MutableMap<K, V>.putSynchronously(key: K, value: V) {
     synchronized(this) {
@@ -46,4 +50,8 @@ fun StaticLayout_createInstance(
             width
         )
     }
+}
+
+fun Int.toDp(): Dp {
+    return (this / Resources.getSystem().displayMetrics.density).roundToInt().dp
 }

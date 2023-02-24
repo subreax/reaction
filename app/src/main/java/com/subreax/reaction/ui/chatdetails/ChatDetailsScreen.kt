@@ -17,8 +17,10 @@ import androidx.compose.ui.unit.dp
 import com.google.accompanist.insets.ui.TopAppBar
 import com.subreax.reaction.R
 import com.subreax.reaction.api.User
+import com.subreax.reaction.ui.LocalStatusBarPadding
 import com.subreax.reaction.ui.components.AutoAvatar
 import com.subreax.reaction.ui.theme.ReactionTheme
+import com.subreax.reaction.utils.pluralResource
 
 @Composable
 fun ChatDetailsScreen(
@@ -80,7 +82,7 @@ fun ChatDetailsScreen(
 @Composable
 private fun TopAppBar(onEditClicked: () -> Unit, onBackClicked: () -> Unit) {
     TopAppBar(
-        contentPadding = WindowInsets.statusBars.asPaddingValues(),
+        contentPadding = LocalStatusBarPadding.current,
         navigationIcon = {
             IconButton(onClick = onBackClicked) {
                 Icon(Icons.Filled.ArrowBack, stringResource(R.string.nav_back))
@@ -123,7 +125,7 @@ private fun ChatGeneralInfo(
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "участников: $membersCount",
+                    text = pluralResource(R.plurals.members_count, membersCount, membersCount),
                     color = LocalContentColor.current.copy(alpha = ContentAlpha.medium)
                 )
             }
