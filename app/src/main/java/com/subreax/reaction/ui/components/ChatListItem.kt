@@ -3,7 +3,6 @@ package com.subreax.reaction.ui.components
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -20,17 +19,16 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
 import com.subreax.reaction.api.User
 import com.subreax.reaction.data.chat.Message
 import com.subreax.reaction.ui.theme.ReactionTheme
 import java.text.SimpleDateFormat
-import java.util.*
 import kotlin.math.floor
 
 
 @Composable
 fun ChatListItem(
+    chatId: String,
     chatName: String,
     avatar: String?,
     lastMessage: Message,
@@ -47,7 +45,7 @@ fun ChatListItem(
         //modifier = Modifier.padding(8.dp)
         modifier = modifier.padding(8.dp)
     ) {
-        AutoAvatar(title = chatName, url = avatar, size = 56.dp)
+        AutoAvatar(colorStr = chatId, title = chatName, url = avatar, size = 56.dp)
 
         ChatListItemBody(
             chatName = chatName,
@@ -218,6 +216,7 @@ fun MessagesCounterPreview() {
 fun ChatListItemPreview() {
     ReactionTheme {
         ChatListItem(
+            chatId = "",
             chatName = "ChatName",
             avatar = null,
             lastMessage = Message(

@@ -13,6 +13,7 @@ import com.subreax.reaction.data.chat.ChatRepository
 import kotlinx.coroutines.launch
 
 data class ChatShareUiState(
+    val chatId: String,
     val chatName: String,
     val qr: BitMatrix
 )
@@ -35,6 +36,7 @@ class ChatShareViewModel(
             val chat = chatRepository.getChatById(chatId)!!
 
             uiState = ChatShareUiState(
+                chatId = chat.id,
                 chatName = chat.title,
                 qr = qr
             )

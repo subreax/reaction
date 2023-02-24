@@ -16,8 +16,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.subreax.reaction.utils.colorGradientFor
 import com.subreax.reaction.ui.theme.ReactionTheme
+import com.subreax.reaction.ui.theme.toGradient
 
 @Composable
 fun Avatar(url: String, size: Dp, modifier: Modifier = Modifier) {
@@ -31,8 +31,8 @@ fun Avatar(url: String, size: Dp, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun AvatarPlaceholder(title: String, size: Dp, modifier: Modifier = Modifier) {
-    val colors = colorGradientFor(title)
+fun AvatarPlaceholder(colorStr: String, title: String, size: Dp, modifier: Modifier = Modifier) {
+    val colors = colorStr.toGradient()
     val brush = Brush.verticalGradient(colors)
 
     val fontSize = with(LocalDensity.current) {
@@ -69,11 +69,11 @@ fun AvatarPlaceholder(title: String, size: Dp, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun AutoAvatar(title: String, url: String?, size: Dp, modifier: Modifier = Modifier) {
+fun AutoAvatar(colorStr: String, title: String, url: String?, size: Dp, modifier: Modifier = Modifier) {
     if (url != null) {
         Avatar(url = url, size = size, modifier)
     } else {
-        AvatarPlaceholder(title = title, size = size, modifier)
+        AvatarPlaceholder(colorStr = colorStr, title = title, size = size, modifier)
     }
 }
 
@@ -82,6 +82,6 @@ fun AutoAvatar(title: String, url: String?, size: Dp, modifier: Modifier = Modif
 @Composable
 fun AvatarPlaceholderPreview() {
     ReactionTheme {
-        AvatarPlaceholder(title = "refrigerator2k", size = 48.dp)
+        AvatarPlaceholder(colorStr = "123456gasdg", title = "refrigerator2k", size = 48.dp)
     }
 }

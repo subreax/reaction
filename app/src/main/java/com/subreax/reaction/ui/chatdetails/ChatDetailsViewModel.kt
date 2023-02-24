@@ -14,6 +14,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 data class ChatDetailsUiState(
+    val chatId: String,
     val chatName: String,
     val members: List<User>
 )
@@ -25,7 +26,7 @@ class ChatDetailsViewModel(
     private val navToChatEditor: () -> Unit,
     private val chatRepository: ChatRepository
 ) : ViewModel() {
-    var uiState by mutableStateOf(ChatDetailsUiState("", emptyList()))
+    var uiState by mutableStateOf(ChatDetailsUiState(chatId, "", emptyList()))
 
     var isNotificationsEnabled by mutableStateOf(false)
         private set
@@ -66,6 +67,7 @@ class ChatDetailsViewModel(
             }
 
             uiState = ChatDetailsUiState(
+                chatId,
                 chat.title,
                 chatRepository.getChatMembers(chatId)
             )

@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.subreax.reaction.utils.StaticLayout_createInstance
 import com.subreax.reaction.ui.theme.ReactionTheme
+import com.subreax.reaction.ui.theme.toColor
 import java.text.SimpleDateFormat
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -118,6 +119,7 @@ private val messageInfoModifier = Modifier.padding(start = 8.dp)
 
 @Composable
 fun Message(
+    userId: String,
     author: String?,
     content: String,
     sentTime: Long,
@@ -131,7 +133,7 @@ fun Message(
                     fontWeight = FontWeight.Bold,
                     fontSize = 12.sp
                 ),
-                color = MaterialTheme.colors.primary
+                color = userId.toColor()
             )
         }
 
@@ -163,6 +165,7 @@ private fun formatTime(time: Long): String {
 fun MessagePreview() {
     ReactionTheme {
         Message(
+            userId = "123456",
             author = "refrigerator2k",
             content = "Hello world",
             sentTime = 1674310839L
@@ -175,6 +178,7 @@ fun MessagePreview() {
 fun MessagePreview1() {
     ReactionTheme {
         Message(
+            userId = "123456",
             author = null,
             content = "Hello world",
             sentTime = 1674310839L

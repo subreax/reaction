@@ -5,21 +5,11 @@ import android.text.Layout
 import android.text.StaticLayout
 import android.text.TextPaint
 import android.text.TextUtils
-import androidx.compose.ui.graphics.Color
 
 fun <K, V> MutableMap<K, V>.putSynchronously(key: K, value: V) {
     synchronized(this) {
         put(key, value)
     }
-}
-
-fun colorGradientFor(str: String): List<Color> {
-    val sum = str.sumOf { it.code } * 55 + 15
-    val hue = (sum.mod(360)).toFloat()
-    val hueOffset = (hue + 30).mod(360.0f)
-    val colorStart = Color.hsv(hue, 0.6f, 0.9f)
-    val colorEnd = Color.hsv(hueOffset, 0.6f, 0.7f)
-    return listOf(colorStart, colorEnd)
 }
 
 fun StaticLayout_createInstance(

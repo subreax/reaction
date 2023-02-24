@@ -31,8 +31,8 @@ import androidx.core.graphics.withSave
 import com.google.zxing.common.BitMatrix
 import com.subreax.reaction.R
 import com.subreax.reaction.utils.StaticLayout_createInstance
-import com.subreax.reaction.utils.colorGradientFor
 import com.subreax.reaction.ui.components.AutoAvatar
+import com.subreax.reaction.ui.theme.toGradient
 import java.lang.Float.min
 import kotlin.math.floor
 import kotlin.math.round
@@ -51,8 +51,9 @@ fun ChatShareScreen(
     if (uiState != null) {
         ChatShareScreen(
             qr = uiState.qr,
-            text = uiState.chatName,
-            colors = colorGradientFor(uiState.chatName),
+            chatId = uiState.chatId,
+            chatName = uiState.chatName,
+            colors = uiState.chatId.toGradient(),
             avatarSize = avatarSize,
             horizontalPadding = horizontalPadding,
             labelMaxHeight = labelMaxHeight,
@@ -64,7 +65,8 @@ fun ChatShareScreen(
 @Composable
 fun ChatShareScreen(
     qr: BitMatrix,
-    text: String,
+    chatId: String,
+    chatName: String,
     colors: List<Color>,
     avatarSize: Dp,
     horizontalPadding: Dp,
@@ -83,7 +85,8 @@ fun ChatShareScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     AutoAvatar(
-                        title = text,
+                        colorStr = chatId,
+                        title = chatName,
                         url = null,
                         size = avatarSize,
                         modifier = Modifier
@@ -109,7 +112,7 @@ fun ChatShareScreen(
                                 drawQrMask(canvas0, qr, qrSize.toInt())
                                 drawTextMask(
                                     canvas0,
-                                    text,
+                                    chatName,
                                     qrSize,
                                     size.width * 0.8f,
                                     size.height - qrSize

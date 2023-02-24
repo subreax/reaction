@@ -16,6 +16,7 @@ import kotlinx.coroutines.launch
 
 data class ChatUiState(
     val isLoading: Boolean,
+    val chatId: String,
     val title: String,
     val avatar: String?,
     val membersCount: Int,
@@ -33,6 +34,7 @@ class ChatViewModel(
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(ChatUiState(
         true,
+        chatId,
         "",
         null,
         0,

@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,7 +34,12 @@ fun HomeScreen(
         topBar = {
             com.google.accompanist.insets.ui.TopAppBar(
                 title = { AppBarTitle(state = uiState.state) },
-                contentPadding = WindowInsets.statusBars.asPaddingValues()
+                contentPadding = WindowInsets.statusBars.asPaddingValues(),
+                navigationIcon = {
+                    IconButton(onClick = { /*TODO*/ }) {
+                        Icon(Icons.Filled.Menu, contentDescription = "Menu")
+                    }
+                }
             )
         },
         floatingActionButton = {
@@ -90,6 +96,7 @@ fun ChatList(
     LazyColumn(modifier = modifier, contentPadding = PaddingValues(bottom = navBarsPadding)) {
         items(chats) { chat ->
             ChatListItem(
+                chatId = chat.id,
                 chatName = chat.title,
                 avatar = chat.avatar,
                 lastMessage = chat.lastMessage ?: Message(

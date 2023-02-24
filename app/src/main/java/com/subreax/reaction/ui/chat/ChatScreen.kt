@@ -63,6 +63,7 @@ fun ChatScreen(
         isLoading = uiState.isLoading,
         appState = uiState.appState,
         currentUserId = viewModel.userId,
+        chatId = uiState.chatId,
         chatTitle = uiState.title,
         avatar = uiState.avatar,
         membersCount = uiState.membersCount,
@@ -82,6 +83,7 @@ fun ChatScreen(
     isLoading: Boolean,
     appState: ApplicationState,
     currentUserId: String,
+    chatId: String,
     chatTitle: String,
     avatar: String?,
     membersCount: Int,
@@ -103,6 +105,7 @@ fun ChatScreen(
         Column {
             MyTopAppBar(
                 appState = appState,
+                chatId = chatId,
                 chatTitle = chatTitle,
                 avatar = avatar,
                 membersCount = membersCount,
@@ -130,7 +133,9 @@ fun ChatScreen(
 @Composable
 fun MyTopAppBar(
     appState: ApplicationState,
-    chatTitle: String, avatar: String?,
+    chatId: String,
+    chatTitle: String,
+    avatar: String?,
     membersCount: Int,
     onBackPressed: () -> Unit,
     onOpenChatDetailsPressed: () -> Unit,
@@ -149,6 +154,7 @@ fun MyTopAppBar(
                     )
             ) {
                 AutoAvatar(
+                    colorStr = chatId,
                     title = chatTitle,
                     url = avatar,
                     size = 40.dp,
@@ -260,6 +266,7 @@ fun MessagesList(
             ) {
                 if (!isMyMsg) {
                     AutoAvatar(
+                        colorStr = message.from.id,
                         title = message.from.name,
                         url = message.from.avatar,
                         size = 32.dp,
@@ -268,6 +275,7 @@ fun MessagesList(
                 }
 
                 Message(
+                    userId = message.from.id,
                     author = author,
                     content = message.content,
                     sentTime = message.sentTime,
@@ -355,6 +363,7 @@ fun ChatScreenPreview() {
             isLoading = false,
             appState = ApplicationState.Ready,
             currentUserId = "123",
+            chatId = "",
             chatTitle = "ChatName",
             avatar = null,
             membersCount = 6,

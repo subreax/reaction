@@ -24,6 +24,7 @@ fun JoinChatScreen(
     when (uiState) {
         is JoinScreenUiState.Data -> {
             JoinChatScreen(
+                chatId = uiState.chatId,
                 name = uiState.chatName,
                 avatar = uiState.avatar,
                 membersCount = uiState.membersCount,
@@ -54,6 +55,7 @@ fun JoinChatScreen(
 
 @Composable
 fun JoinChatScreen(
+    chatId: String,
     name: String,
     avatar: String?,
     membersCount: Int,
@@ -68,7 +70,7 @@ fun JoinChatScreen(
             modifier = Modifier.padding(horizontal = 16.dp)
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                AutoAvatar(name, avatar, size = 96.dp)
+                AutoAvatar(colorStr = chatId, name, avatar, size = 96.dp)
                 Text(
                     text = name,
                     style = MaterialTheme.typography.h4.copy(fontWeight = FontWeight.Light),
@@ -105,6 +107,7 @@ fun JoinChatScreen(
 fun JoinChatScreenPreview() {
     ReactionTheme {
         JoinChatScreen(
+            chatId = "",
             name = "ChatName",
             avatar = null,
             membersCount = 12,

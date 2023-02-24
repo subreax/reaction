@@ -27,6 +27,7 @@ fun ChatDetailsScreen(
     val uiState = chatDetailsViewModel.uiState
 
     ChatDetailsScreen(
+        chatId = uiState.chatId,
         chatName = uiState.chatName,
         members = uiState.members,
         onEditClicked = chatDetailsViewModel::editChat,
@@ -39,6 +40,7 @@ fun ChatDetailsScreen(
 
 @Composable
 fun ChatDetailsScreen(
+    chatId: String,
     chatName: String,
     members: List<User>,
     onEditClicked: () -> Unit,
@@ -52,7 +54,7 @@ fun ChatDetailsScreen(
             onEditClicked = onEditClicked,
             onBackClicked = onBackClicked
         )
-        ChatGeneralInfo(chatName, members.size)
+        ChatGeneralInfo(chatId, chatName, members.size)
 
         Action(
             icon = Icons.Filled.Notifications,
@@ -95,7 +97,9 @@ private fun TopAppBar(onEditClicked: () -> Unit, onBackClicked: () -> Unit) {
 
 @Composable
 private fun ChatGeneralInfo(
-    chatName: String, membersCount: Int
+    chatId: String,
+    chatName: String,
+    membersCount: Int
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -106,6 +110,7 @@ private fun ChatGeneralInfo(
             verticalAlignment = Alignment.CenterVertically
         ) {
             AutoAvatar(
+                colorStr = chatId,
                 title = chatName,
                 url = null,
                 size = 64.dp,
@@ -170,7 +175,7 @@ private fun MembersList(members: List<User>) {
 
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 for (user in members) {
-                    MemberListItem(username = user.name, avatar = user.avatar)
+                    MemberListItem(userId = user.id, username = user.name, avatar = user.avatar)
                 }
             }
         }
@@ -178,11 +183,12 @@ private fun MembersList(members: List<User>) {
 }
 
 @Composable
-private fun MemberListItem(username: String, avatar: String?) {
+private fun MemberListItem(userId: String, username: String, avatar: String?) {
     Row(
         modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically
     ) {
         AutoAvatar(
+            colorStr = userId,
             title = username,
             url = avatar,
             size = 48.dp,
@@ -207,6 +213,7 @@ private fun MemberListItem(username: String, avatar: String?) {
 private fun ChatDetailsScreenPreview() {
     ReactionTheme {
         ChatDetailsScreen(
+            chatId = "",
             chatName = "Chat Name",
             members = listOf(
                 User("", "Хто я", null, 0),

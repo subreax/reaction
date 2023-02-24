@@ -14,6 +14,7 @@ sealed class JoinScreenUiState {
     object Loading : JoinScreenUiState()
     class Error(val msg: String) : JoinScreenUiState()
     data class Data(
+        val chatId: String,
         val chatName: String,
         val avatar: String?,
         val membersCount: Int,
@@ -37,6 +38,7 @@ class JoinChatViewModel(
                 Log.d("JoinChatViewModel", "Chat name: ${chat?.title}")
                 if (chat != null) {
                     uiState = JoinScreenUiState.Data(
+                        chatId = chat.id,
                         chatName = chat.title,
                         avatar = chat.avatar,
                         membersCount = chat.membersCount,
