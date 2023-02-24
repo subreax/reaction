@@ -93,14 +93,13 @@ class ChatRepositoryImpl(
             val membersRet = remoteChatDS.getChatMembers(chatId)
             if (membersRet is Return.Ok) {
                 _chatMembers[chatId] = membersRet.value
-                return membersRet.value
             }
             else {
                 val fail = membersRet as Return.Fail
                 Log.e(TAG, "Failed to get members for the chat: ${fail.code}  ${fail.message}")
             }
         }
-        return emptyList()
+        return _chatMembers[chatId] ?: emptyList()
     }
 
     override suspend fun getMessages(chatId: String): List<Message> {
