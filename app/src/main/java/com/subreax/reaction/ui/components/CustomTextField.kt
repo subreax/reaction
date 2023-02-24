@@ -1,4 +1,4 @@
-package com.subreax.reaction.ui
+package com.subreax.reaction.ui.components
 
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import androidx.compose.foundation.layout.padding
@@ -41,23 +41,9 @@ fun CustomTextField(
 }
 
 @Preview(showBackground = true)
-@Composable
-fun CustomTextFieldPreview() {
-    ReactionTheme {
-        Surface {
-            CustomTextField(
-                value = "",
-                onValueChange = {},
-                hint = "Hint",
-                modifier = Modifier.padding(16.dp)
-            )
-        }
-    }
-}
-
 @Preview(showBackground = true, uiMode = UI_MODE_NIGHT_YES)
 @Composable
-fun CustomTextFieldPreviewDark() {
+fun CustomTextFieldPreview() {
     ReactionTheme {
         Surface {
             CustomTextField(

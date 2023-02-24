@@ -9,8 +9,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.subreax.reaction.ui.CustomButton
-import com.subreax.reaction.ui.CustomOutlinedButton
+import com.subreax.reaction.ui.components.CustomButton
+import com.subreax.reaction.ui.components.CustomOutlinedButton
 import com.subreax.reaction.ui.components.AutoAvatar
 import com.subreax.reaction.ui.components.LoadingOverlay
 import com.subreax.reaction.ui.theme.ReactionTheme

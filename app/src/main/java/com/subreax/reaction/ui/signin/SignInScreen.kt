@@ -21,8 +21,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.subreax.reaction.R
-import com.subreax.reaction.ui.CustomButton
-import com.subreax.reaction.ui.CustomTextField
+import com.subreax.reaction.ui.components.CustomButton
+import com.subreax.reaction.ui.components.CustomTextField
 import com.subreax.reaction.ui.theme.ReactionTheme
 
 @Composable

@@ -1,4 +1,4 @@
-package com.subreax.reaction.ui
+package com.subreax.reaction.ui.components
 
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import androidx.compose.foundation.layout.Column
@@ -50,20 +50,9 @@ fun CustomOutlinedButton(
 }
 
 @Preview
-@Composable
-fun CustomButtonPreview() {
-    ReactionTheme {
-        Column {
-            CustomButton(text = "Button", onClick = { })
-            Spacer(Modifier.heightIn(32.dp))
-            CustomOutlinedButton(text = "Button", onClick = { })
-        }
-    }
-}
-
 @Preview(uiMode = UI_MODE_NIGHT_YES, name = "Button Night")
 @Composable
-fun CustomButtonPreviewDark() {
+fun CustomButtonPreview() {
     ReactionTheme {
         Column {
             CustomButton(text = "Button", onClick = { })
