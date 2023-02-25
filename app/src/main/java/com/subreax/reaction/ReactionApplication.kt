@@ -36,6 +36,7 @@ class ReactionApplication : Application(), ImageLoaderFactory {
                     .maxSizePercent(0.1)
                     .build()
             )
+            .respectCacheHeaders(false)
             .build()
     }
 }

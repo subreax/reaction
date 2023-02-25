@@ -86,7 +86,6 @@ class WebSocketIoService(
         json.put("text", msgText)
         json.put("userId", authRepository.getUserId())
         json.put("roomId", chatId)
-        json.put("date", System.currentTimeMillis())
         json.put("type", "text")
         _socket?.emit("newMessage", json)
 
