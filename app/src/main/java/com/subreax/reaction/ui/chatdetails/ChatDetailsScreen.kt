@@ -1,15 +1,16 @@
 package com.subreax.reaction.ui.chatdetails
 
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -19,6 +20,7 @@ import com.subreax.reaction.R
 import com.subreax.reaction.api.User
 import com.subreax.reaction.ui.LocalStatusBarPadding
 import com.subreax.reaction.ui.components.AutoAvatar
+import com.subreax.reaction.ui.components.OptionItem
 import com.subreax.reaction.ui.theme.ReactionTheme
 import com.subreax.reaction.utils.pluralResource
 
@@ -58,22 +60,27 @@ fun ChatDetailsScreen(
         )
         ChatGeneralInfo(chatId, chatName, members.size)
 
-        Action(
-            icon = Icons.Filled.Notifications,
-            title = stringResource(R.string.notifications),
-            onClick = { onNotificationsToggled(!isNotificationsEnabled) }
-        ) {
-            Switch(
-                checked = isNotificationsEnabled,
-                onCheckedChange = onNotificationsToggled
-            )
+        Surface {
+            Column {
+                OptionItem(
+                    icon = Icons.Filled.Notifications,
+                    title = stringResource(R.string.notifications),
+                    onClick = { onNotificationsToggled(!isNotificationsEnabled) },
+                    contentPadding = edgePadding
+                ) {
+                    Switch(
+                        checked = isNotificationsEnabled,
+                        onCheckedChange = onNotificationsToggled
+                    )
+                }
+                OptionItem(
+                    icon = Icons.Filled.Share,
+                    title = stringResource(R.string.share),
+                    onClick = onShareClicked,
+                    contentPadding = edgePadding
+                )
+            }
         }
-
-        Action(
-            icon = Icons.Filled.Share,
-            title = stringResource(R.string.share),
-            onClick = onShareClicked
-        )
 
         MembersList(members)
     }
@@ -108,7 +115,7 @@ private fun ChatGeneralInfo(
         elevation = AppBarDefaults.TopAppBarElevation
     ) {
         Row(
-            modifier = Modifier.padding(edgePadding),
+            modifier = Modifier.padding(edgePadding).padding(vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             AutoAvatar(
@@ -134,39 +141,13 @@ private fun ChatGeneralInfo(
 }
 
 @Composable
-private fun Action(
-    icon: ImageVector,
-    title: String,
-    onClick: () -> Unit,
-    trailingSection: @Composable RowScope.() -> Unit = {}
-) {
-    Surface(
-        Modifier
-            .heightIn(48.dp)
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = edgePadding),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(icon, title, modifier = Modifier.padding(end = 16.dp))
-            Text(title)
-            Spacer(Modifier.weight(1.0f))
-            trailingSection()
-        }
-
-    }
-}
-
-@Composable
 private fun MembersList(members: List<User>) {
     Surface(
         Modifier
             .padding(top = 16.dp)
             .fillMaxSize()
     ) {
-        Column(Modifier.padding(horizontal = edgePadding)) {
+        Column(Modifier.padding(edgePadding)) {
             Text(
                 text = stringResource(R.string.members),
                 modifier = Modifier.padding(vertical = 8.dp),
@@ -231,4 +212,4 @@ private fun ChatDetailsScreenPreview() {
 }
 
 
-private val edgePadding = 16.dp
+private val edgePadding = PaddingValues(horizontal = 16.dp)

@@ -42,6 +42,10 @@ class WebSocketIoService(
     override val onLeaveChat: Flow<String>
         get() = _onLeaveChat.asSharedFlow()
 
+    private val _onChatNameChanged = MutableSharedFlow<SocketService.ChatNameChange>()
+    override val onChatNameChanged: Flow<SocketService.ChatNameChange>
+        get() = _onChatNameChanged.asSharedFlow()
+
     init {
         appStateSource.addConnectingAction {
             stop()
@@ -74,6 +78,7 @@ class WebSocketIoService(
                 on("onCreateRoom", this@WebSocketIoService::eventOnCreateChat)
                 on("onJoinToRoom", this@WebSocketIoService::eventOnJoinChat)
                 on("onLeaveFromRoom", this@WebSocketIoService::eventOnLeaveChat)
+                on("onUpdateRoomName", this@WebSocketIoService::eventOnChatNameChanged)
                 connect()
             }
 
@@ -117,6 +122,16 @@ class WebSocketIoService(
         _socket?.emit("leaveFromRoom", json)
 
         Log.d(TAG, "emit leaveFromRoom")
+    }
+
+    override fun setChatName(chatId: String, newName: String) {
+        val json = JSONObject().apply {
+            put("roomId", chatId)
+            put("name", newName)
+        }
+        _socket?.emit("updateRoomName", json)
+
+        Log.d(TAG, "emit updateRoomName")
     }
 
     override fun stop() {
@@ -193,6 +208,18 @@ class WebSocketIoService(
             val chatId = json.getString("roomId")
             _coroutineScope.launch {
                 _onLeaveChat.emit(chatId)
+            }
+        }
+    }
+
+    private fun eventOnChatNameChanged(args: Array<Any>) {
+        Log.d(TAG, "event onChatNameChanged")
+        if (args.isNotEmpty()) {
+            val json = args[0] as JSONObject
+            val chatId = json.getString("roomId")
+            val newName = json.getString("newRoomName")
+            _coroutineScope.launch {
+                _onChatNameChanged.emit(SocketService.ChatNameChange(chatId, newName))
             }
         }
     }

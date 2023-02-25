@@ -37,4 +37,11 @@ sealed class Screen(val route: String) {
             navArgument(chatIdArg) { type = NavType.StringType }
         )
     }
+    object ChatEditor : Screen("chat_editor_screen") {
+        val chatIdArg = "chatId"
+        val routeWithArgs = "$route/{$chatIdArg}"
+        val args = listOf(
+            navArgument(chatIdArg) { type = NavType.StringType }
+        )
+    }
 }

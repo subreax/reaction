@@ -12,8 +12,7 @@ import com.subreax.reaction.utils.waitFor
 import com.subreax.reaction.utils.waitForAny
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -38,9 +37,8 @@ class ChatRepositoryImpl(
     override val onMessagesChanged: Flow<Chat>
         get() = _onMessagesChanged
 
-    override val onChatsChanged: Flow<Int>
-        get() = localChatDS.onChatsChanged
-
+    override val onChatChanged: Flow<String>
+        get() = localChatDS.onChatChanged
 
     init {
         appStateSrc.addSyncingAction {
@@ -50,6 +48,7 @@ class ChatRepositoryImpl(
         }
 
         observeOnMessage()
+        observeOnChatNameChanged()
     }
 
     private suspend fun syncChats() {
@@ -74,6 +73,17 @@ class ChatRepositoryImpl(
                     localChatDS.updateOne(chat.copy(lastMessage = msg))
                     _messages[chat.id]?.add(msg)
                     notifyMessagesChanged(chat)
+                }
+            }
+        }
+    }
+
+    private fun observeOnChatNameChanged() {
+        coroutineScope.launch {
+            socketService.onChatNameChanged.collect { update ->
+                val chat = localChatDS.findById(update.chatId)
+                if (chat != null) {
+                    localChatDS.updateOne(chat.copy(title = update.newName))
                 }
             }
         }
@@ -139,6 +149,17 @@ class ChatRepositoryImpl(
             socketService.leaveChat(chatId)
             socketService.onLeaveChat.waitFor(chatId)
             removeChat(chatId)
+        }
+    }
+
+    override suspend fun setChatName(chatId: String, newName: String) {
+        val chat = localChatDS.findById(chatId)
+        if (chat != null) {
+            socketService.setChatName(chatId, newName)
+            socketService.onChatNameChanged.waitFor { it.chatId == chatId }
+        }
+        else {
+            Log.e(TAG, "setChatName($chatId) - Unknown chat id")
         }
     }
 

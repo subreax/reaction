@@ -32,9 +32,10 @@ interface ChatRepository {
     suspend fun createChat(name: String)
     suspend fun joinChat(chatId: String)
     suspend fun leaveChat(chatId: String)
+    suspend fun setChatName(chatId: String, newName: String)
     suspend fun isUserAMemberOfTheChat(chatId: String): Boolean
     suspend fun toggleNotifications(chatId: String, enabled: Boolean)
 
     val onMessagesChanged: Flow<Chat>
-    val onChatsChanged: Flow<Int>
+    val onChatChanged: Flow<String>
 }

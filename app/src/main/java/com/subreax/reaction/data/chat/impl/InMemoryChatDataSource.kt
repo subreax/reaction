@@ -11,9 +11,9 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 class InMemoryChatDataSource : LocalChatDataSource {
-    private val _chatsChangedEvent = MutableSharedFlow<Int>(0)
-    override val onChatsChanged: Flow<Int>
-        get() = _chatsChangedEvent
+    private val _onChatChanged = MutableSharedFlow<String>()
+    override val onChatChanged: Flow<String>
+        get() = _onChatChanged
 
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
     private val chatMap = mutableMapOf<String, Chat>()
@@ -38,9 +38,15 @@ class InMemoryChatDataSource : LocalChatDataSource {
 
     override suspend fun updateOne(chat: Chat) {
         mutex.withLock {
-            chatMap[chat.id] = chat
+            if (chatMap.containsKey(chat.id)) {
+                chatMap[chat.id] = chat
+                notifyChatChanged(chat.id)
+            }
+            else {
+                chatMap[chat.id] = chat
+                notifyChatsChanged()
+            }
         }
-        notifyChatsChanged()
     }
 
     override suspend fun remove(chatId: String) {
@@ -58,7 +64,13 @@ class InMemoryChatDataSource : LocalChatDataSource {
 
     private fun notifyChatsChanged() {
         coroutineScope.launch {
-            _chatsChangedEvent.emit(0)
+            _onChatChanged.emit("")
+        }
+    }
+
+    private fun notifyChatChanged(chatId: String) {
+        coroutineScope.launch {
+            _onChatChanged.emit(chatId)
         }
     }
 }

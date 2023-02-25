@@ -58,24 +58,13 @@ class ChatViewModel(
         }
 
         viewModelScope.launch {
-            val chat = chatRepository.getChatById(chatId)
-            if (chat != null) {
-                _uiState.value = _uiState.value.copy(
-                    title = chat.title,
-                    avatar = chat.avatar,
-                    membersCount = chat.membersCount
-                )
+            if (syncChatDetails()) {
                 syncMessages()
-            }
-            else {
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    title = "Unknown chat"
-                )
             }
         }
 
         listenMessagesChanging()
+        listenChatChanges()
     }
 
     private suspend fun syncMessages(): Boolean {
@@ -99,6 +88,33 @@ class ChatViewModel(
                 }
             }
         }
+    }
+
+    private fun listenChatChanges() {
+        viewModelScope.launch {
+            chatRepository.onChatChanged.collect {
+                if (it == chatId || it.isEmpty()) {
+                    syncChatDetails()
+                }
+            }
+        }
+    }
+
+    private suspend fun syncChatDetails(): Boolean {
+        val chat = chatRepository.getChatById(chatId)
+        if (chat != null) {
+            _uiState.value = _uiState.value.copy(
+                title = chat.title,
+                avatar = chat.avatar,
+                membersCount = chat.membersCount
+            )
+            return true
+        }
+        _uiState.value = _uiState.value.copy(
+            isLoading = false,
+            title = "Unknown chat"
+        )
+        return false
     }
 
     override fun onCleared() {

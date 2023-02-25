@@ -27,6 +27,14 @@
     <string name="connecting">Подключение…</string>
     <string name="syncing">Синхронизация…</string>
     <string name="message">Сообщение</string>
+    <string name="name_for_a_chat">Название для чата</string>
+    <string name="change_avatar">Сменить аву</string>
+    <string name="commit_changes">Применить изменения</string>
+    <string name="chat_editor">Редактор чата</string>
+    <string name="yes">Да</string>
+    <string name="no">Нет</string>
+    <string name="warning">Предупреждение</string>
+    <string name="warning_unsaved_changes">Имеются несохранённые изменения. Применить их?</string>
     <plurals name="members_count">
         <item quantity="zero">%d участников</item>
         <item quantity="one">%d участник</item>

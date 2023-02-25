@@ -1,6 +1,6 @@
 package com.subreax.reaction
 
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
@@ -12,6 +12,8 @@ import com.subreax.reaction.ui.chat.ChatScreen
 import com.subreax.reaction.ui.chat.ChatViewModel
 import com.subreax.reaction.ui.chatdetails.ChatDetailsScreen
 import com.subreax.reaction.ui.chatdetails.ChatDetailsViewModel
+import com.subreax.reaction.ui.chateditor.ChatEditorScreen
+import com.subreax.reaction.ui.chateditor.ChatEditorViewModel
 import com.subreax.reaction.ui.chatshare.ChatShareScreen
 import com.subreax.reaction.ui.chatshare.ChatShareViewModel
 import com.subreax.reaction.ui.home.HomeScreen
@@ -156,7 +158,9 @@ fun ReactionNavHost(
                         navToChatSharing = {
                             navController.navigate("${Screen.ChatShare.route}/$chatId")
                         },
-                        navToChatEditor = { },
+                        navToChatEditor = {
+                            navController.navigate("${Screen.ChatEditor.route}/$chatId")
+                        },
                         appContainer.chatRepository
                     )
                 )
@@ -179,6 +183,24 @@ fun ReactionNavHost(
                 ),
                 //colors = listOf(Color(0xFF79EB71), Color(0xFF257AC2)),
                 onBackPressed = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = Screen.ChatEditor.routeWithArgs,
+            arguments = Screen.ChatEditor.args
+        ) { navBackStackEntry ->
+            val args = navBackStackEntry.arguments!!
+            val chatId = args.getString(Screen.ChatEditor.chatIdArg) ?: ""
+
+            ChatEditorScreen(
+                viewModel(
+                    factory = ChatEditorViewModel.Factory(
+                        chatId = chatId,
+                        chatRepository = appContainer.chatRepository,
+                        navigateBack = { navController.popBackStack() }
+                    )
+                )
             )
         }
     }

@@ -35,6 +35,7 @@ class ChatDetailsViewModel(
 
     init {
         requestChatDetails()
+        listenForChatChanges()
     }
 
     fun toggleNotifications(enabled: Boolean) {
@@ -72,6 +73,16 @@ class ChatDetailsViewModel(
                 chatRepository.getChatMembers(chatId)
             )
             isNotificationsEnabled = !chat.isMuted
+        }
+    }
+
+    private fun listenForChatChanges() {
+        viewModelScope.launch {
+            chatRepository.onChatChanged.collect {
+                if (it == chatId || it.isEmpty()) {
+                    requestChatDetails()
+                }
+            }
         }
     }
 
