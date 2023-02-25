@@ -2,6 +2,7 @@ package com.subreax.reaction.ui.components
 
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
@@ -37,13 +38,24 @@ fun ChatListItem(
     isPinned: Boolean,
     modifier: Modifier = Modifier
 ) {
-    /*Surface(
-        modifier = modifier
-    ) {*/
+    val surfaceColor = MaterialTheme.colors.surface
+    val backgroundColor: Color
+    if (isPinned) {
+        backgroundColor = LocalElevationOverlay.current?.apply(
+            color = surfaceColor,
+            elevation = 2.dp
+        ) ?: surfaceColor
+    }
+    else {
+        backgroundColor = surfaceColor
+    }
+
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        //modifier = Modifier.padding(8.dp)
-        modifier = modifier.padding(8.dp)
+        modifier = modifier
+            .background(backgroundColor)
+            .padding(8.dp)
     ) {
         AutoAvatar(colorStr = chatId, title = chatName, url = avatar, size = 56.dp)
 
@@ -51,6 +63,7 @@ fun ChatListItem(
             chatName = chatName,
             msgSender = lastMessage.from.name,
             msg = lastMessage.content,
+            isMuted = isMuted,
             modifier = Modifier.weight(1.0f)
         )
 
@@ -58,7 +71,7 @@ fun ChatListItem(
             Text(
                 text = formatTime(lastMessage.sentTime),
                 fontSize = 13.sp,
-                color = LocalContentColor.current.copy(alpha = 0.5f),
+                color = LocalContentColor.current.copy(alpha = ContentAlpha.disabled),
                 modifier = Modifier.align(Alignment.TopEnd)
             )
 
@@ -66,16 +79,6 @@ fun ChatListItem(
                 modifier = Modifier.align(Alignment.BottomEnd),
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                if (isMuted) {
-                    ChatCircleThing {
-                        Icon(
-                            imageVector = Icons.Default.VolumeOff,
-                            contentDescription = "Chat volume is off",
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-                }
-
                 if (unreadMessagesCount > 0) {
                     MessagesCounter(
                         count = unreadMessagesCount,
@@ -86,18 +89,17 @@ fun ChatListItem(
                             MaterialTheme.colors.onSurface.copy(alpha = 0.2f)
                     )
                 } else if (isPinned) {
-                    ChatCircleThing {
+                    OutlinedChatCircleIcon {
                         Icon(
                             imageVector = Icons.Default.PushPin,
                             contentDescription = "Chat is pinned",
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(14.dp)
                         )
                     }
                 }
             }
         }
     }
-    //}
 }
 
 @Composable
@@ -105,24 +107,38 @@ private fun ChatListItemBody(
     chatName: String,
     msgSender: String,
     msg: String,
+    isMuted: Boolean,
     modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier.padding(horizontal = 8.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        Text(
-            text = chatName,
-            style = MaterialTheme.typography.body1.copy(fontWeight = FontWeight.Bold),
-            overflow = TextOverflow.Ellipsis,
-            maxLines = 1
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = chatName,
+                style = MaterialTheme.typography.body1.copy(fontWeight = FontWeight.Bold),
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 1
+            )
+
+            if (isMuted) {
+                Icon(
+                    imageVector = Icons.Default.VolumeOff,
+                    contentDescription = "Chat volume is off",
+                    modifier = Modifier
+                        .padding(start = 4.dp)
+                        .size(16.dp),
+                    tint = LocalContentColor.current.copy(alpha = ContentAlpha.disabled)
+                )
+            }
+        }
 
         Row {
             Text(
                 text = msgSender,
                 style = MaterialTheme.typography.body1,
-                color = LocalContentColor.current.copy(alpha = 0.5f),
+                color = LocalContentColor.current.copy(alpha = ContentAlpha.medium),
                 modifier = Modifier.padding(end = 4.dp),
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1
@@ -135,7 +151,6 @@ private fun ChatListItemBody(
                 maxLines = 1
             )
         }
-
     }
 }
 
@@ -172,8 +187,7 @@ fun ChatCircleThing(
         modifier = modifier
             .clip(RoundedCornerShape(50))
             .background(color)
-            .widthIn(24.dp)
-            .heightIn(24.dp)
+            .sizeIn(minWidth = 24.dp, minHeight = 24.dp)
             .padding(horizontal = 5.dp),
         contentAlignment = Alignment.Center
     ) {
@@ -186,6 +200,27 @@ fun ChatCircleThing(
             ) {
                 content()
             }
+        }
+    }
+}
+
+@Composable
+fun OutlinedChatCircleIcon(
+    modifier: Modifier = Modifier,
+    icon: @Composable () -> Unit
+) {
+    val shape = RoundedCornerShape(50)
+
+    CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.disabled) {
+        val borderColor = LocalContentColor.current.copy(alpha = LocalContentAlpha.current)
+        Box(
+            modifier = modifier
+                .clip(shape)
+                .border(width = 1.dp, color = borderColor, shape = shape)
+                .sizeIn(minWidth = 24.dp, minHeight = 24.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            icon()
         }
     }
 }
@@ -215,24 +250,26 @@ fun MessagesCounterPreview() {
 @Composable
 fun ChatListItemPreview() {
     ReactionTheme {
-        ChatListItem(
-            chatId = "",
-            chatName = "ChatName",
-            avatar = null,
-            lastMessage = Message(
-                "",
-                User(
+        Surface(color = MaterialTheme.colors.background) {
+            ChatListItem(
+                chatId = "",
+                chatName = "ChatName",
+                avatar = null,
+                lastMessage = Message(
                     "",
-                    "refrigerator2k",
-                    null,
-                    System.currentTimeMillis()
+                    User(
+                        "",
+                        "refrigerator2k",
+                        null,
+                        System.currentTimeMillis()
+                    ),
+                    "message",
+                    1673546695L
                 ),
-                "message",
-                1673546695L
-            ),
-            unreadMessagesCount = 5,
-            isPinned = false,
-            isMuted = false
-        )
+                unreadMessagesCount = 0,
+                isPinned = true,
+                isMuted = true
+            )
+        }
     }
 }
