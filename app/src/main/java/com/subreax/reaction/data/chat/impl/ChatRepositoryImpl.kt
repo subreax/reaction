@@ -81,7 +81,7 @@ class ChatRepositoryImpl(
 
     override suspend fun getChatsList(): List<Chat> {
         return localChatDS.getList()
-            .sortedByDescending { it.lastMessage?.sentTime ?: System.currentTimeMillis() }
+            .sortedWith(ChatDescendingComparator())
     }
 
     override suspend fun getChatById(chatId: String): Chat? {
@@ -185,6 +185,21 @@ class ChatRepositoryImpl(
         _chatMembers.remove(chatId)
         _messages.remove(chatId)
         localChatDS.remove(chatId)
+    }
+
+    private inner class ChatDescendingComparator : Comparator<Chat> {
+        override fun compare(o1: Chat, o2: Chat): Int {
+            if (o1.isPinned && !o2.isPinned) {
+                return -1
+            }
+            if (!o1.isPinned && o2.isPinned) {
+                return 1
+            }
+
+            val o1time = o1.lastMessage?.sentTime ?: System.currentTimeMillis()
+            val o2time = o2.lastMessage?.sentTime ?: System.currentTimeMillis()
+            return o2time.compareTo(o1time)
+        }
     }
 
     companion object {
